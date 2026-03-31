@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>个人助理</title>
+  <!-- CloudBase JS SDK -->
+  <script src="https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js"></script>
+  <style>
+    :root {
+      --bg: #0f1117; --bg2: #1a1d27; --bg3: #22263a;
+      --border: #2e3250; --text: #e8eaf6; --text-muted: #7b82b0;
+      --accent: #5c7cfa; --accent2: #74c0fc;
+      --green: #51cf66; --yellow: #ffd43b; --red: #ff6b6b; --orange: #ff922b;
+      --radius: 14px; --shadow: 0 4px 24px rgba(0,0,0,0.4);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', 'Microsoft YaHei', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* ── 顶栏 ── */
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 24px; background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo-icon { font-size: 24px; }
+    .logo-text { font-size: 17px; font-weight: 700; }
+    .logo-version { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+    .header-right { display: flex; align-items: center; gap: 12px; }
+    .datetime-display { text-align: right; }
+    .datetime-date { font-size: 12px; color: var(--text-muted); }
+    .datetime-time { font-size: 17px; font-weight: 600; color: var(--accent2); }
+
+    /* 用户区域 */
+    .user-area { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 6px 12px; border-radius: 20px; background: var(--bg3); border: 1px solid var(--border); transition: all .2s; }
+    .user-area:hover { border-color: var(--accent); }
+    .user-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0; }
+    .user-name { font-size: 13px; color: var(--text); max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .user-tag { font-size: 10px; color: var(--text-muted); }
+    .btn-settings { background: var(--bg3); border: 1px solid var(--border); color: var(--text); padding: 7px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; transition: all .2s; }
+    .btn-settings:hover { background: var(--border); }
+
+    /* ── 主内容 ── */
+    main { max-width: 1240px; margin: 0 auto; padding: 20px 16px; display: grid; grid-template-columns: 360px 1fr; gap: 18px; }
+    @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+
+    /* ── 卡片 ── */
+    .card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); }
+    .card-title { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
+
+    /* ── 天气 ── */
+    .weather-panel { display: flex; flex-direction: column; gap: 14px; }
+    .weather-current { background: linear-gradient(135deg, #1e2d6b 0%, #0f1535 100%); border-radius: var(--radius); padding: 20px; position: relative; overflow: hidden; }
+    .weather-location { font-size: 13px; color: var(--text-muted); margin-bottom: 10px; }
+    .weather-main { display: flex; align-items: flex-end; gap: 14px; margin-bottom: 8px; }
+    .weather-icon-big { font-size: 48px; line-height: 1; }
+    .weather-temp-big { font-size: 50px; font-weight: 700; color: #fff; line-height: 1; }
+    .weather-temp-unit { font-size: 20px; color: var(--text-muted); align-self: flex-start; margin-top: 8px; }
+    .weather-desc { font-size: 15px; color: var(--accent2); margin-bottom: 12px; }
+    .weather-meta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+    .weather-meta-item { background: rgba(255,255,255,0.06); border-radius: 7px; padding: 7px 9px; text-align: center; }
+    .weather-meta-label { font-size: 10px; color: var(--text-muted); }
+    .weather-meta-val { font-size: 14px; font-weight: 600; color: var(--text); margin-top: 2px; }
+    .forecast-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; }
+    .forecast-item { background: var(--bg3); border: 1px solid var(--border); border-radius: 9px; padding: 12px 8px; text-align: center; }
+    .forecast-label { font-size: 12px; color: var(--text-muted); margin-bottom: 5px; }
+    .forecast-icon { font-size: 24px; margin: 3px 0; }
+    .forecast-temp { font-size: 13px; font-weight: 600; }
+    .forecast-temp .min { color: var(--text-muted); margin-left: 3px; }
+    .forecast-rain { font-size: 11px; color: var(--accent2); margin-top: 3px; }
+    .advice-card { background: var(--bg3); border-radius: 9px; padding: 12px 14px; border-left: 3px solid var(--accent); }
+    .advice-title { font-size: 11px; color: var(--text-muted); margin-bottom: 7px; }
+    .advice-item { font-size: 13px; color: var(--text); padding: 2px 0; line-height: 1.6; }
+    .advice-umbrella { margin-top: 5px; font-size: 13px; color: var(--accent2); padding: 5px 9px; background: rgba(116,192,252,0.1); border-radius: 5px; }
+    .city-edit { display: flex; align-items: center; gap: 7px; margin-bottom: 12px; }
+    .city-input { flex: 1; background: var(--bg3); border: 1px solid var(--border); color: var(--text); border-radius: 7px; padding: 6px 10px; font-size: 13px; outline: none; }
+    .city-input:focus { border-color: var(--accent); }
+    .btn-city { padding: 6px 12px; background: var(--accent); color: #fff; border: none; border-radius: 7px; font-size: 13px; cursor: pointer; }
+    .btn-refresh { width: 100%; padding: 8px; background: var(--bg3); border: 1px solid var(--border); color: var(--text-muted); border-radius: 7px; cursor: pointer; font-size: 13px; transition: all .2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .btn-refresh:hover { background: var(--border); color: var(--text); }
+    .btn-refresh.loading { opacity: .6; pointer-events: none; }
+
+    /* ── 日程/广场 Tab ── */
+    .schedule-panel { display: flex; flex-direction: column; gap: 14px; }
+    .tab-bar { display: flex; gap: 5px; border-bottom: 1px solid var(--border); padding-bottom: 0; margin-bottom: 0; }
+    .tab { padding: 8px 15px; font-size: 13px; cursor: pointer; border-radius: 8px 8px 0 0; color: var(--text-muted); transition: all .2s; border: 1px solid transparent; border-bottom: none; position: relative; bottom: -1px; }
+    .tab:hover { color: var(--text); }
+    .tab.active { background: var(--bg2); border-color: var(--border); border-bottom-color: var(--bg2); color: var(--accent2); font-weight: 600; }
+
+    /* ── 任务 ── */
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 9px; }
+    .section-label { font-size: 13px; font-weight: 600; color: var(--text-muted); }
+    .badge { font-size: 11px; padding: 2px 7px; border-radius: 20px; background: var(--bg3); color: var(--text-muted); }
+    .task-list { display: flex; flex-direction: column; gap: 5px; }
+    .task-item { display: flex; align-items: center; gap: 9px; padding: 9px 11px; border-radius: 8px; background: var(--bg3); border: 1px solid var(--border); transition: all .15s; }
+    .task-item:hover { border-color: var(--accent); }
+    .task-item.done { opacity: .5; }
+    .task-check { width: 17px; height: 17px; min-width: 17px; border: 2px solid var(--border); border-radius: 50%; cursor: pointer; transition: all .15s; display: flex; align-items: center; justify-content: center; }
+    .task-check:hover { border-color: var(--green); }
+    .task-check.checked { background: var(--green); border-color: var(--green); }
+    .task-check.checked::after { content: '✓'; font-size: 10px; color: #fff; font-weight: 700; }
+    .task-body { flex: 1; min-width: 0; }
+    .task-title { font-size: 14px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .task-item.done .task-title { text-decoration: line-through; }
+    .task-meta { display: flex; align-items: center; gap: 5px; margin-top: 2px; flex-wrap: wrap; }
+    .task-desc { font-size: 12px; color: var(--text-muted); }
+    .tag { font-size: 11px; padding: 1px 6px; border-radius: 4px; background: rgba(92,124,250,0.15); color: var(--accent); }
+    .task-type-badge { font-size: 10px; padding: 1px 5px; border-radius: 4px; color: #fff; white-space: nowrap; }
+    .type-yearly { background: #7c3aed; } .type-monthly { background: #0369a1; } .type-weekly { background: #0f766e; } .type-daily { background: #166534; } .type-once { background: #9a3412; }
+    .task-actions { display: flex; gap: 4px; }
+    .btn-del { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 14px; padding: 2px 4px; border-radius: 4px; transition: all .15s; opacity: 0; }
+    .task-item:hover .btn-del { opacity: 1; }
+    .btn-del:hover { color: var(--red); }
+    .upcoming-item { display: flex; align-items: center; gap: 9px; padding: 8px 11px; border-radius: 8px; background: var(--bg3); border: 1px solid var(--border); }
+    .upcoming-when { font-size: 12px; font-weight: 700; color: var(--yellow); min-width: 44px; text-align: center; }
+    .upcoming-when.today-label { color: var(--red); } .upcoming-when.tomorrow-label { color: var(--orange); }
+    .quick-add-row { display: flex; gap: 7px; margin-bottom: 9px; }
+    .quick-add-input { flex: 1; background: var(--bg3); border: 1px dashed var(--border); color: var(--text); border-radius: 8px; padding: 8px 12px; font-size: 13px; outline: none; font-family: inherit; }
+    .quick-add-input:focus { border-color: var(--accent); border-style: solid; }
+    .quick-add-input::placeholder { color: var(--text-muted); }
+    .btn-quick-add { padding: 8px 14px; background: var(--accent); color: #fff; border: none; border-radius: 8px; font-size: 13px; cursor: pointer; white-space: nowrap; }
+    .type-section { margin-bottom: 16px; }
+    .type-section-title { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 7px; display: flex; align-items: center; gap: 5px; }
+    .schedule-stat { display: flex; gap: 9px; margin-bottom: 12px; }
+    .stat-item { flex: 1; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; text-align: center; }
+    .stat-val { font-size: 19px; font-weight: 700; color: var(--accent2); }
+    .stat-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    /* ── 广场 ── */
+    .plaza-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .plaza-compose { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 14px; }
+    .plaza-textarea { width: 100%; background: transparent; border: none; color: var(--text); font-size: 14px; font-family: inherit; resize: none; outline: none; min-height: 64px; line-height: 1.6; }
+    .plaza-textarea::placeholder { color: var(--text-muted); }
+    .plaza-compose-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
+    .plaza-char-count { font-size: 12px; color: var(--text-muted); }
+    .plaza-char-count.warn { color: var(--orange); }
+    .plaza-char-count.over { color: var(--red); }
+    .btn-post { padding: 7px 18px; background: var(--accent); color: #fff; border: none; border-radius: 8px; font-size: 13px; cursor: pointer; transition: opacity .2s; }
+    .btn-post:hover { opacity: .88; }
+    .btn-post:disabled { opacity: .4; cursor: default; }
+    .post-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 9px; transition: border-color .2s; }
+    .post-card:hover { border-color: var(--border); }
+    .post-header { display: flex; align-items: center; gap: 9px; margin-bottom: 9px; }
+    .post-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0; }
+    .post-name { font-size: 13px; font-weight: 600; color: var(--text); }
+    .post-time { font-size: 11px; color: var(--text-muted); }
+    .post-body { font-size: 14px; color: var(--text); line-height: 1.7; word-break: break-all; }
+    .post-footer { display: flex; align-items: center; gap: 14px; margin-top: 10px; }
+    .post-action { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-muted); cursor: pointer; padding: 3px 7px; border-radius: 5px; transition: all .15s; border: none; background: none; }
+    .post-action:hover { background: var(--bg2); color: var(--text); }
+    .post-action.liked { color: var(--red); }
+    .post-action.mine-post { margin-left: auto; }
+    .post-action.mine-post:hover { color: var(--red); }
+    .post-tag-self { font-size: 10px; padding: 1px 6px; border-radius: 4px; background: rgba(92,124,250,0.15); color: var(--accent); margin-left: auto; }
+    .plaza-load-more { width: 100%; padding: 9px; background: var(--bg3); border: 1px solid var(--border); color: var(--text-muted); border-radius: 8px; cursor: pointer; font-size: 13px; margin-top: 8px; transition: all .2s; }
+    .plaza-load-more:hover { background: var(--border); }
+    .day-limit-tip { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 5px; }
+    .day-limit-used { color: var(--green); }
+
+    /* ── 弹窗 ── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(4px); z-index: 200; display: none; align-items: center; justify-content: center; }
+    .modal-overlay.show { display: flex; }
+    .modal { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); width: 480px; max-width: 95vw; padding: 26px; box-shadow: var(--shadow); animation: modalIn .2s ease; }
+    @keyframes modalIn { from { opacity: 0; transform: translateY(-20px) scale(.97); } to { opacity: 1; transform: none; } }
+    .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 18px; }
+    .form-group { margin-bottom: 13px; }
+    .form-label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; display: block; }
+    .form-input, .form-select, .form-textarea { width: 100%; background: var(--bg3); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 9px 11px; font-size: 14px; outline: none; transition: border-color .2s; font-family: inherit; }
+    .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); }
+    .form-select option { background: var(--bg3); }
+    .form-textarea { resize: vertical; min-height: 70px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+    .dynamic-fields { margin-top: 3px; }
+    .modal-footer { display: flex; gap: 9px; justify-content: flex-end; margin-top: 18px; }
+    .btn { padding: 8px 18px; border-radius: 8px; font-size: 14px; cursor: pointer; transition: all .2s; border: none; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { opacity: .88; }
+    .btn-ghost { background: var(--bg3); color: var(--text-muted); border: 1px solid var(--border); }
+    .btn-ghost:hover { color: var(--text); }
+    .btn-add-task { display: flex; align-items: center; gap: 5px; padding: 7px 14px; background: var(--accent); color: #fff; border: none; border-radius: 8px; font-size: 13px; cursor: pointer; }
+    .btn-add-task:hover { opacity: .88; }
+    .weekday-checkboxes { display: flex; gap: 5px; flex-wrap: wrap; }
+    .weekday-cb { display: none; }
+    .weekday-label { padding: 4px 9px; border-radius: 5px; font-size: 12px; cursor: pointer; background: var(--bg3); border: 1px solid var(--border); color: var(--text-muted); transition: all .15s; }
+    .weekday-cb:checked + .weekday-label { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    /* ── 设置侧栏 ── */
+    .settings-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); backdrop-filter: blur(4px); z-index: 200; display: none; align-items: flex-start; justify-content: flex-end; }
+    .settings-overlay.show { display: flex; }
+    .settings-panel { background: var(--bg2); border-left: 1px solid var(--border); width: 320px; height: 100vh; padding: 26px 22px; overflow-y: auto; animation: slideIn .25s ease; }
+    @keyframes slideIn { from { transform: translateX(100%); } to { transform: none; } }
+    .settings-title { font-size: 16px; font-weight: 700; margin-bottom: 22px; }
+    .settings-section { margin-bottom: 20px; }
+    .settings-section-title { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px; }
+
+    /* 账号卡片 */
+    .account-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 12px; }
+    .account-info { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .account-avatar-lg { width: 40px; height: 40px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #fff; flex-shrink: 0; }
+    .account-detail { flex: 1; }
+    .account-name { font-size: 14px; font-weight: 600; color: var(--text); }
+    .account-type { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .account-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn-bind-wx { display: flex; align-items: center; gap: 6px; padding: 7px 14px; background: #07c160; color: #fff; border: none; border-radius: 7px; font-size: 13px; cursor: pointer; }
+    .btn-bind-wx:hover { opacity: .88; }
+    .btn-logout { padding: 7px 14px; background: var(--bg2); color: var(--text-muted); border: 1px solid var(--border); border-radius: 7px; font-size: 13px; cursor: pointer; }
+    .btn-logout:hover { color: var(--red); border-color: var(--red); }
+    .btn-set-nick { padding: 7px 14px; background: var(--bg2); color: var(--text-muted); border: 1px solid var(--border); border-radius: 7px; font-size: 13px; cursor: pointer; }
+    .btn-set-nick:hover { color: var(--accent); border-color: var(--accent); }
+
+    /* 登录弹窗 */
+    .login-modal { max-width: 360px; text-align: center; }
+    .login-modal .modal-title { font-size: 20px; margin-bottom: 6px; }
+    .login-subtitle { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
+    .btn-wx-login { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px; background: #07c160; color: #fff; border: none; border-radius: 10px; font-size: 15px; cursor: pointer; margin-bottom: 10px; transition: opacity .2s; }
+    .btn-wx-login:hover { opacity: .88; }
+    .btn-anon-login { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px; background: var(--bg3); color: var(--text-muted); border: 1px solid var(--border); border-radius: 10px; font-size: 14px; cursor: pointer; transition: all .2s; }
+    .btn-anon-login:hover { border-color: var(--accent); color: var(--text); }
+    .login-divider { font-size: 12px; color: var(--text-muted); margin: 12px 0; }
+    .login-tip { font-size: 11px; color: var(--text-muted); margin-top: 16px; line-height: 1.6; }
+
+    /* Toast / loading */
+    .toast-container { position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%); z-index: 300; display: flex; flex-direction: column; align-items: center; gap: 7px; }
+    .toast { padding: 9px 20px; border-radius: 30px; font-size: 14px; background: var(--bg3); border: 1px solid var(--border); box-shadow: var(--shadow); animation: toastIn .25s ease; color: var(--text); }
+    .toast.success { border-color: var(--green); color: var(--green); }
+    .toast.error   { border-color: var(--red);   color: var(--red);   }
+    @keyframes toastIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+    .empty-state { text-align: center; padding: 26px; color: var(--text-muted); font-size: 14px; }
+    .empty-icon { font-size: 30px; margin-bottom: 7px; }
+    .spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<!-- ── 顶栏 ── -->
+<header>
+  <div class="logo">
+    <span class="logo-icon">🤖</span>
+    <div>
+      <div class="logo-text">个人助理</div>
+      <div class="logo-version">v2.0.0 · 多账号版</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="datetime-display">
+      <div class="datetime-date" id="headerDate"></div>
+      <div class="datetime-time" id="headerTime"></div>
+    </div>
+    <div class="user-area" onclick="showSettings()" id="userArea">
+      <div class="user-avatar" id="headerAvatar">?</div>
+      <div>
+        <div class="user-name" id="headerName">登录中…</div>
+        <div class="user-tag" id="headerTag">-</div>
+      </div>
+    </div>
+    <button class="btn-settings" onclick="showSettings()">⚙️</button>
+  </div>
+</header>
+
+<!-- ── 主内容 ── -->
+<main>
+  <!-- 左列：天气 -->
+  <div class="weather-panel">
+    <div class="city-edit">
+      <input class="city-input" id="cityInput" placeholder="城市（如 Beijing、上海）" />
+      <button class="btn-city" onclick="changeCity()">更新</button>
+    </div>
+    <div class="weather-current" id="weatherCurrent">
+      <div style="text-align:center;padding:20px 0;">
+        <div class="spinner"></div>
+        <div style="font-size:13px;color:var(--text-muted);margin-top:9px;">正在获取天气…</div>
+      </div>
+    </div>
+    <div>
+      <div class="card-title">📅 三日预报</div>
+      <div class="forecast-row" id="forecastRow">
+        <div style="grid-column:1/-1;text-align:center;padding:10px;color:var(--text-muted);font-size:13px;">加载中…</div>
+      </div>
+    </div>
+    <div class="advice-card" id="adviceCard" style="display:none">
+      <div class="advice-title">💡 明日出行建议</div>
+      <div id="adviceList"></div>
+    </div>
+    <button class="btn-refresh" id="refreshBtn" onclick="loadWeather()">🔄 刷新天气</button>
+  </div>
+
+  <!-- 右列：日程+广场 -->
+  <div class="schedule-panel">
+    <div>
+      <div class="tab-bar">
+        <div class="tab active" data-tab="today" onclick="switchTab('today')">📌 今日</div>
+        <div class="tab" data-tab="all" onclick="switchTab('all')">📋 所有日程</div>
+        <div class="tab" data-tab="plaza" onclick="switchTab('plaza')">🌍 广场</div>
+      </div>
+    </div>
+
+    <!-- 今日面板 -->
+    <div id="tabToday">
+      <div class="schedule-stat">
+        <div class="stat-item"><div class="stat-val" id="statTotal">-</div><div class="stat-label">今日事项</div></div>
+        <div class="stat-item"><div class="stat-val" id="statDone">-</div><div class="stat-label">已完成</div></div>
+        <div class="stat-item"><div class="stat-val" id="statUpcoming">-</div><div class="stat-label">近期提醒</div></div>
+      </div>
+      <div class="section-header">
+        <span class="section-label">今日待办</span>
+        <span class="badge" id="todayBadge">0</span>
+      </div>
+      <div class="quick-add-row">
+        <input class="quick-add-input" id="quickAddInput" placeholder="＋ 快速添加今日事项，回车确认…" onkeydown="if(event.key==='Enter') quickAddTask()" />
+        <button class="btn-quick-add" onclick="quickAddTask()">添加</button>
+      </div>
+      <div class="task-list" id="todayList">
+        <div style="text-align:center;padding:14px;color:var(--text-muted);font-size:13px;">加载中…</div>
+      </div>
+      <div style="margin-top:18px">
+        <div class="section-header">
+          <span class="section-label">近期提醒（7日内）</span>
+          <span class="badge" id="upcomingBadge">0</span>
+        </div>
+        <div id="upcomingList"></div>
+      </div>
+    </div>
+
+    <!-- 所有日程面板 -->
+    <div id="tabAll" style="display:none">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+        <button class="btn-add-task" onclick="showAddModal()">＋ 添加日程</button>
+      </div>
+      <div id="allScheduleList">
+        <div style="text-align:center;padding:14px;color:var(--text-muted);font-size:13px;">加载中…</div>
+      </div>
+    </div>
+
+    <!-- 广场面板 -->
+    <div id="tabPlaza" style="display:none">
+      <!-- 发帖区 -->
+      <div class="plaza-compose" id="plazaCompose">
+        <textarea class="plaza-textarea" id="plazaText" placeholder="分享你的想法、心情、求助… 每天限发1条广场消息" maxlength="200" oninput="onPlazaInput()"></textarea>
+        <div class="plaza-compose-footer">
+          <div class="day-limit-tip" id="dayLimitTip">
+            <span class="spinner" id="limitSpinner" style="display:none"></span>
+            <span id="dayLimitText">今日广场发言：0 / 1</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="plaza-char-count" id="charCount">0 / 200</span>
+            <button class="btn-post" id="btnPost" onclick="submitPost()" disabled>发布</button>
+          </div>
+        </div>
+      </div>
+      <!-- 帖子列表 -->
+      <div id="plazaList">
+        <div style="text-align:center;padding:20px;color:var(--text-muted)"><span class="spinner"></span></div>
+      </div>
+      <button class="plaza-load-more" id="plazaLoadMore" onclick="loadMorePosts()" style="display:none">加载更多</button>
+    </div>
+  </div>
+</main>
+
+<!-- ── 添加日程弹窗 ── -->
+<div class="modal-overlay" id="addModal" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-title">➕ 添加日程</div>
+    <div class="form-group">
+      <label class="form-label">任务标题 *</label>
+      <input class="form-input" id="fTitle" placeholder="例：爸爸生日" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">任务类型 *</label>
+      <select class="form-select" id="fType" onchange="onTypeChange()">
+        <option value="yearly">📆 每年（纪念日/节假日）</option>
+        <option value="monthly">🗓️ 每月</option>
+        <option value="weekly">📋 每周</option>
+        <option value="daily">☀️ 每日</option>
+        <option value="once">📍 单次</option>
+      </select>
+    </div>
+    <div class="dynamic-fields" id="dynamicFields"></div>
+    <div class="form-group">
+      <label class="form-label">任务描述</label>
+      <textarea class="form-textarea" id="fDesc" placeholder="可选备注…"></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">标签（逗号分隔）</label>
+        <input class="form-input" id="fTags" placeholder="工作, 财务" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">提前提醒天数</label>
+        <input class="form-input" id="fRemind" type="number" min="0" value="0" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeAddModal()">取消</button>
+      <button class="btn btn-primary" onclick="submitTask()">添加</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 设置侧栏 ── -->
+<div class="settings-overlay" id="settingsOverlay" onclick="closeSettings(event)">
+  <div class="settings-panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:22px">
+      <div class="settings-title" style="margin:0">⚙️ 设置</div>
+      <button class="btn btn-ghost" onclick="closeSettings()" style="padding:5px 11px">✕</button>
+    </div>
+
+    <!-- 账号信息 -->
+    <div class="settings-section">
+      <div class="settings-section-title">👤 我的账号</div>
+      <div class="account-card" id="accountCard">
+        <div class="account-info">
+          <div class="account-avatar-lg" id="settingsAvatar">?</div>
+          <div class="account-detail">
+            <div class="account-name" id="settingsName">加载中…</div>
+            <div class="account-type" id="settingsType">-</div>
+          </div>
+        </div>
+        <div class="account-actions">
+          <button class="btn-set-nick" onclick="promptSetNickname()">✏️ 设置昵称</button>
+          <button class="btn-bind-wx" id="btnBindWx" onclick="bindWeChat()" style="display:none">微信登录绑定</button>
+          <button class="btn-logout" onclick="doLogout()">退出登录</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 天气 -->
+    <div class="settings-section">
+      <div class="settings-section-title">🌤️ 天气设置</div>
+      <div class="form-group">
+        <label class="form-label">天气城市</label>
+        <div style="display:flex;gap:7px">
+          <input class="form-input" id="sCity" />
+          <button class="btn-city" onclick="saveSettings()">保存</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">纪念日提前提醒天数</label>
+        <input class="form-input" id="sRemindDays" type="number" min="0" />
+      </div>
+    </div>
+
+    <!-- 服务状态 -->
+    <div class="settings-section">
+      <div class="settings-section-title">🏥 服务状态</div>
+      <div id="healthPanel" style="font-size:13px;color:var(--text-muted)">加载中…</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── 登录弹窗 ── -->
+<div class="modal-overlay" id="loginModal">
+  <div class="modal login-modal">
+    <div class="modal-title">🤖 欢迎使用</div>
+    <div class="login-subtitle">登录后日程数据将永久保存并跨设备同步</div>
+    <button class="btn-wx-login" id="btnWxLogin" onclick="loginWithWeChat()">
+      <span style="font-size:18px">💬</span> 微信一键登录
+    </button>
+    <div class="login-divider">— 或者 —</div>
+    <button class="btn-anon-login" onclick="loginAnonymously()">
+      <span>👤</span> 匿名体验（数据仅存当前设备）
+    </button>
+    <div class="login-tip">匿名登录后可随时在设置中绑定微信账号，数据将自动合并。</div>
+  </div>
+</div>
+
+<!-- ── Toast ── -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ================================================================
+//  CloudBase 初始化
+// ================================================================
+const ENV_ID = 'zwonder-8gq5j7i479378123';
+const REGION  = 'ap-shanghai';
+const ACCESS_KEY = 'eyJhbGciOiJSUzI1NiIsImtpZCI6IjlkMWRjMzFlLWI0ZDAtNDQ4Yi1hNzZmLWIwY2M2M2Q4MTQ5OCJ9.eyJpc3MiOiJodHRwczovL3p3b25kZXItOGdxNWo3aTQ3OTM3ODEyMy5hcC1zaGFuZ2hhaS50Y2ItYXBpLnRlbmNlbnRjbG91ZGFwaS5jb20iLCJzdWIiOiJhbm9uIiwiYXVkIjoiendvbmRlci04Z3E1ajdpNDc5Mzc4MTIzIiwiZXhwIjo0MDc4NjA1NjEyLCJpYXQiOjE3NzQ5MjI0MTIsIm5vbmNlIjoiRkhPTVhDVXdUdXU4X1lxS181bzgydyIsImF0X2hhc2giOiJGSE9NWENVd1R1dThfWXFLXzVvODJ3IiwibmFtZSI6IkFub255bW91cyIsInNjb3BlIjoiYW5vbnltb3VzIiwicHJvamVjdF9pZCI6Inp3b25kZXItOGdxNWo3aTQ3OTM3ODEyMyIsIm1ldGEiOnsicGxhdGZvcm0iOiJQdWJsaXNoYWJsZUtleSJ9LCJ1c2VyX3R5cGUiOiIiLCJjbGllbnRfdHlwZSI6ImNsaWVudF91c2VyIiwiaXNfc3lzdGVtX2FkbWluIjpmYWxzZX0.PBDhXoc0scYmgc_6qXOpNUwMkmHno2geZOUFccph7l3VmNDK_kmwLhvwVH_k34a3P7F_5XlBt3lcsdC3lnJLp8ya_y1gIm77KnwWyHgY4k2PXTD1oz7HZavAcJnvrfnNZAoujNC5HUDstnysSKc3cN2xAoEpQxtiKiIXme6Zpumdtso44hoRavysIBktKDhsMZK5_eJHifw5gaycFhugy-psKYJ50ZvpioOhNzgi9IezVCffoAkGfRmbOMw_GNRnnBeryIiHxSkGqOBWVH5LaksfjynHFOVjYRfxBuZzCyFPkOoL-_bD7sKQsIFxgQFGLF1kitGLDGXsX2VGeoZIfw';
+
+const cbApp = cloudbase.init({ env: ENV_ID, region: REGION, accessKey: ACCESS_KEY, auth: { detectSessionInUrl: true } });
+const auth = cbApp.auth;
+const db   = cbApp.database();
+const _    = db.command;
+
+// 生产/开发后端地址
+const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? '' : 'https://personal-assistant-240653-4-1305999503.sh.run.tcloudbase.com';
+
+let currentUser = null;  // CloudBase User 对象
+let currentOpenid = null;
+
+// ================================================================
+//  工具函数
+// ================================================================
+function toast(msg, type = '') {
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.textContent = msg;
+  document.getElementById('toastContainer').appendChild(el);
+  setTimeout(() => el.remove(), 2800);
+}
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function timeAgo(ts) {
+  const diff = (Date.now() - ts) / 1000;
+  if (diff < 60) return '刚刚';
+  if (diff < 3600) return `${Math.floor(diff/60)}分钟前`;
+  if (diff < 86400) return `${Math.floor(diff/3600)}小时前`;
+  return `${Math.floor(diff/86400)}天前`;
+}
+function avatarLetter(name) {
+  if (!name) return '?';
+  return name.replace(/匿名用户|游客/,'').trim().slice(-1) || name.slice(0,1) || '?';
+}
+function hashColor(str) {
+  const colors = ['#5c7cfa','#74c0fc','#51cf66','#ffd43b','#ff922b','#f783ac','#cc5de8','#20c997'];
+  let h = 0;
+  for (let c of (str||'')) h = (h*31 + c.charCodeAt(0)) % colors.length;
+  return colors[h];
+}
+
+// API 调用（带 auth token）
+async function api(method, path, body) {
+  const { data: sess } = await auth.getSession();
+  const token = sess?.session?.access_token || '';
+  const opts = { method, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` } };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(API_BASE + '/api' + path, opts);
+  return res.json();
+}
+
+// ================================================================
+//  时钟
+// ================================================================
+const WEEKDAYS = ['周日','周一','周二','周三','周四','周五','周六'];
+function tickClock() {
+  const now = new Date();
+  document.getElementById('headerDate').textContent = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 ${WEEKDAYS[now.getDay()]}`;
+  document.getElementById('headerTime').textContent = now.toTimeString().slice(0,8);
+}
+tickClock(); setInterval(tickClock, 1000);
+
+// ================================================================
+//  认证模块
+// ================================================================
+function showLoginModal() {
+  document.getElementById('loginModal').classList.add('show');
+}
+function hideLoginModal() {
+  document.getElementById('loginModal').classList.remove('show');
+}
+
+async function loginAnonymously() {
+  try {
+    const { data, error } = await auth.signInAnonymously();
+    if (error) throw error;
+    toast('登录成功', 'success');
+    hideLoginModal();
+  } catch(e) {
+    toast('登录失败: ' + (e.message || e), 'error');
+  }
+}
+
+async function loginWithWeChat() {
+  try {
+    const { data, error } = await auth.signInWithOAuth({ provider: 'wechat' });
+    if (error) throw error;
+    window.location.href = data.url;
+  } catch(e) {
+    toast('微信登录暂未配置，请使用匿名登录', 'error');
+  }
+}
+
+async function bindWeChat() {
+  try {
+    const { data, error } = await auth.linkIdentity({ provider: 'wechat' });
+    if (error) throw error;
+    window.location.href = data.url;
+  } catch(e) {
+    toast('绑定微信失败: ' + (e.message || e), 'error');
+  }
+}
+
+async function doLogout() {
+  if (!confirm('确认退出登录？')) return;
+  await auth.signOut();
+  toast('已退出', 'success');
+}
+
+async function promptSetNickname() {
+  const cur = currentUser?.user_metadata?.nickName || currentUser?.user_metadata?.name || currentUser?.user_metadata?.custom_name || '';
+  const name = prompt('设置昵称（最多12字）', cur);
+  if (!name || !name.trim()) return;
+  const nick = name.trim().slice(0, 12);
+
+  try {
+    console.log('Setting nickname:', nick);
+    console.log('Current user:', currentUser);
+
+    // 使用数据库存储昵称（不使用 CloudBase Auth）
+    const { data: existing } = await db.collection('pa_user_config').where({ author_id: currentOpenid }).get();
+
+    if (existing.length > 0) {
+      // 更新现有配置
+      await db.collection('pa_user_config').doc(existing[0]._id).update({
+        nickname: nick,
+        updated_at: Date.now()
+      });
+      console.log('Updated nickname in database');
+    } else {
+      // 创建新配置
+      await db.collection('pa_user_config').add({
+        nickname: nick,
+        author_id: currentOpenid,
+        created_at: Date.now()
+      });
+      console.log('Created nickname in database');
+    }
+
+    // 更新本地缓存
+    if (!currentUser.user_metadata) {
+      currentUser.user_metadata = {};
+    }
+    currentUser.user_metadata.custom_name = nick;
+
+    // 更新UI
+    updateUserUI();
+    toast('昵称已更新', 'success');
+  } catch (e) {
+    console.error('Update nickname exception:', e);
+    toast('设置失败: ' + (e.message || '网络错误'), 'error');
+  }
+}
+
+async function refreshUser() {
+  const { data } = await auth.getUser();
+  currentUser = data?.user || null;
+  updateUserUI();
+}
+
+function getUserDisplayName(user) {
+  if (!user) return '未登录';
+  // 优先使用我们数据库中存储的自定义昵称
+  return user.user_metadata?.custom_name
+    || user.user_metadata?.nickName
+    || user.user_metadata?.name
+    || user.user_metadata?.username
+    || (user.is_anonymous ? '匿名用户' : '用户');
+}
+
+function updateUserUI() {
+  const u = currentUser;
+  const name = getUserDisplayName(u);
+  const isAnon = u?.is_anonymous;
+  const letter = avatarLetter(name);
+  const color = hashColor(u?.id || '');
+
+  // 顶栏
+  document.getElementById('headerName').textContent = name;
+  document.getElementById('headerTag').textContent = isAnon ? '匿名' : '已绑定';
+  const ha = document.getElementById('headerAvatar');
+  ha.textContent = letter; ha.style.background = color;
+
+  // 设置侧栏
+  document.getElementById('settingsName').textContent = name;
+  document.getElementById('settingsType').textContent = isAnon ? '匿名用户（可绑定微信）' : '已登录用户';
+  const sa = document.getElementById('settingsAvatar');
+  sa.textContent = letter; sa.style.background = color;
+  document.getElementById('btnBindWx').style.display = isAnon ? '' : 'none';
+
+  currentOpenid = u?.id || null;
+}
+
+// 监听认证状态变化
+auth.onAuthStateChange(async (event, session) => {
+  if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') {
+    await refreshUser();
+    hideLoginModal();
+    // 登录后立即加载用户配置（包括昵称）
+    await loadUserConfig();
+    initApp();
+  } else if (event === 'SIGNED_OUT') {
+    currentUser = null;
+    currentOpenid = null;
+    updateUserUI();
+    showLoginModal();
+  }
+});
+
+// ================================================================
+//  天气
+// ================================================================
+function weatherIcon(desc) {
+  if (!desc) return '🌡️';
+  const d = desc.toLowerCase();
+  if (d.includes('thunder')) return '⛈️';
+  if (d.includes('snow') || d.includes('blizzard')) return d.includes('blizzard') ? '❄️' : '🌨️';
+  if (d.includes('rain') || d.includes('shower')) return '🌧️';
+  if (d.includes('drizzle')) return '🌦️';
+  if (d.includes('fog') || d.includes('mist') || d.includes('haze')) return '🌫️';
+  if (d.includes('overcast')) return '☁️';
+  if (d.includes('cloud') || d.includes('partly')) return '⛅';
+  if (d.includes('sunny') || d.includes('bright')) return '☀️';
+  if (d.includes('clear')) return '🌙';
+  return '🌡️';
+}
+
+async function loadWeather() {
+  const btn = document.getElementById('refreshBtn');
+  btn.classList.add('loading'); btn.innerHTML = '<span class="spinner"></span> 获取中…';
+  try {
+    const res = await api('GET', '/weather');
+    if (res.code !== 0) { toast('天气获取失败: ' + res.msg, 'error'); return; }
+    renderWeather(res.data);
+    document.getElementById('cityInput').value = res.data.city || '';
+  } catch(e) { toast('网络错误', 'error'); }
+  finally { btn.classList.remove('loading'); btn.innerHTML = '🔄 刷新天气'; }
+}
+
+function renderWeather(data) {
+  const cur = data.current;
+  const icon = cur.icon || weatherIcon(cur.desc);
+  document.getElementById('weatherCurrent').innerHTML = `
+    <div class="weather-location">📍 ${data.area || data.city}, ${data.country}
+      <span style="font-size:11px;color:var(--text-muted);margin-left:6px">${data.query_time}</span></div>
+    <div class="weather-main">
+      <div class="weather-icon-big">${icon}</div>
+      <div class="weather-temp-big">${cur.temp}</div>
+      <div class="weather-temp-unit">°C</div>
+    </div>
+    <div class="weather-desc">${cur.desc}</div>
+    <div class="weather-meta">
+      <div class="weather-meta-item"><div class="weather-meta-label">体感</div><div class="weather-meta-val">${cur.feels_like}°</div></div>
+      <div class="weather-meta-item"><div class="weather-meta-label">湿度</div><div class="weather-meta-val">${cur.humidity}%</div></div>
+      <div class="weather-meta-item"><div class="weather-meta-label">风速</div><div class="weather-meta-val">${cur.wind_speed}<small style="font-size:10px">km/h</small></div></div>
+    </div>`;
+  document.getElementById('forecastRow').innerHTML = data.forecasts.map(f => `
+    <div class="forecast-item">
+      <div class="forecast-label">${f.label}</div>
+      <div class="forecast-icon">${f.icon || weatherIcon(f.desc||'')}</div>
+      <div class="forecast-temp">${f.max_temp}°<span class="min">${f.min_temp}°</span></div>
+      ${f.rain_chance > 15 ? `<div class="forecast-rain">🌧 ${f.rain_chance}%</div>` : ''}
+    </div>`).join('');
+  const tm = data.forecasts[1];
+  if (tm) {
+    document.getElementById('adviceCard').style.display = '';
+    let html = (tm.clothing_advice||[]).map(a=>`<div class="advice-item">${a}</div>`).join('');
+    html += tm.umbrella_advice
+      ? `<div class="advice-umbrella">${tm.umbrella_advice}</div>`
+      : `<div class="advice-umbrella" style="color:var(--green)">☀️ 明日天气良好，无需携带雨具</div>`;
+    document.getElementById('adviceList').innerHTML = html;
+  }
+}
+
+async function changeCity() {
+  const city = document.getElementById('cityInput').value.trim();
+  if (!city) { toast('请输入城市名', 'error'); return; }
+  // 同时保存到用户配置
+  await saveUserConfig({ city });
+  const res = await api('PUT', '/weather/city', { city });
+  if (res.code === 0) { toast('城市已更新', 'success'); loadWeather(); }
+  else toast('更新失败: ' + res.msg, 'error');
+}
+
+// ================================================================
+//  Tab 切换
+// ================================================================
+let activeTab = 'today';
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  document.getElementById('tabToday').style.display = tab === 'today' ? '' : 'none';
+  document.getElementById('tabAll').style.display = tab === 'all' ? '' : 'none';
+  document.getElementById('tabPlaza').style.display = tab === 'plaza' ? '' : 'none';
+  if (tab === 'all') loadAllSchedule();
+  if (tab === 'plaza') initPlaza();
+}
+
+// ================================================================
+//  日程（CloudBase NoSQL）
+// ================================================================
+async function loadToday() {
+  try {
+    // 检查是否登录
+    if (!currentOpenid) {
+      console.log('用户未登录,跳过加载日程数据');
+      document.getElementById('todayList').innerHTML = `<div class="empty-state"><div class="empty-icon">🔒</div><div>请先登录</div></div>`;
+      return;
+    }
+
+    const today = new Date().toISOString().slice(0, 10);
+    console.log('加载今日日程, currentOpenid:', currentOpenid);
+
+    const r = await db.collection('pa_schedules').where({ author_id: currentOpenid }).get();
+    console.log('查询结果:', r);
+
+    if (r.code) { throw new Error(r.message || '查询失败'); }
+    const allTasks = r.data || [];
+
+    console.log('所有任务:', allTasks.length);
+
+    // 筛选今日任务和计算提醒
+    const tasks = computeTodayTasks(allTasks, today);
+    const upcoming = computeUpcoming(allTasks, today, 7);
+
+    console.log('今日任务:', tasks.length, '近期提醒:', upcoming.length);
+
+    renderToday(tasks, upcoming);
+  } catch(e) {
+    console.error('loadToday error:', e);
+    document.getElementById('todayList').innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><div>加载失败: ${e.message}</div></div>`;
+  }
+}
+
+function computeUpcoming(tasks, todayStr, days) {
+  const result = [];
+  const today = new Date(todayStr);
+  const seenIds = new Set(); // 用于去重
+
+  for (let i = 0; i <= days; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    const ds = d.toISOString().slice(0, 10);
+    const wd = (d.getDay() + 6) % 7; // 0=Mon...6=Sun
+    const m = d.getMonth() + 1;
+    const day = d.getDate();
+
+    for (const t of tasks) {
+      const remind = t.remind_days_before || 0;
+
+      // 检查是否应该在提醒日显示
+      let shouldRemind = false;
+
+      if (t.task_type === 'yearly') {
+        // 年任务：在提醒日前显示
+        const targetDate = new Date(d.getFullYear(), t.yearly_month - 1, t.yearly_day);
+        const diffDays = Math.round((targetDate - d) / 86400000);
+        if (diffDays >= 0 && diffDays <= remind && remind > 0) {
+          shouldRemind = true;
+        }
+      } else if (t.task_type === 'monthly') {
+        // 月任务：在提醒日前显示
+        const targetDay = t.monthly_day;
+        let isReminderDay = false;
+        if (targetDay === -1) {
+          // 每月最后一天
+          const nextMonth = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+          const lastDay = new Date(nextMonth - 1);
+          if (d.getDate() === lastDay.getDate()) {
+            isReminderDay = true;
+          }
+        } else if (targetDay === day) {
+          isReminderDay = true;
+        }
+        if (isReminderDay) {
+          shouldRemind = true;
+        }
+      } else if (t.task_type === 'once') {
+        // 单次任务：在提醒日前显示
+        const targetDate = new Date(t.once_date);
+        const diffDays = Math.round((targetDate - d) / 86400000);
+        if (diffDays >= 0 && diffDays <= remind && remind > 0) {
+          shouldRemind = true;
+        }
+      }
+
+      // 添加到提醒列表（去重）
+      if (shouldRemind) {
+        const diffDays = Math.round((d - today) / 86400000);
+        // 使用任务ID作为唯一标识，避免重复
+        if (!seenIds.has(t._id)) {
+          seenIds.add(t._id);
+          result.push({
+            ...t,
+            id: t._id,
+            date: ds,
+            diff_days: diffDays,
+            diff_label: diffDays === 0 ? '今天' : (diffDays === 1 ? '明天' : `${diffDays}天后`)
+          });
+        }
+      }
+    }
+  }
+
+  return result.sort((a, b) => a.diff_days - b.diff_days).slice(0, 20);
+}
+
+function computeTodayTasks(allTasks, todayStr) {
+  const today = new Date(todayStr);
+  const dayOfWeek = (today.getDay() + 6) % 7; // 0=Mon...6=Sun
+  const dayOfMonth = today.getDate();
+  const month = today.getMonth() + 1;
+
+  const todayTasks = [];
+
+  for (const t of allTasks) {
+    let shouldShowToday = false;
+
+    if (t.status !== 'pending') continue;
+
+    if (t.task_type === 'yearly') {
+      // 每年任务：检查月和日
+      if (t.yearly_month === month && t.yearly_day === dayOfMonth) {
+        shouldShowToday = true;
+      }
+    } else if (t.task_type === 'monthly') {
+      // 每月任务：检查日期（-1表示最后一天）
+      if (t.monthly_day === dayOfMonth) {
+        shouldShowToday = true;
+      } else if (t.monthly_day === -1) {
+        // 检查是否是当月最后一天
+        const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+        const lastDay = new Date(nextMonth - 1);
+        if (dayOfMonth === lastDay.getDate()) {
+          shouldShowToday = true;
+        }
+      }
+    } else if (t.task_type === 'weekly') {
+      // 每周任务：检查星期
+      if (t.weekly_days && t.weekly_days.includes(dayOfWeek)) {
+        shouldShowToday = true;
+      }
+    } else if (t.task_type === 'daily') {
+      // 每日任务：每天都显示
+      shouldShowToday = true;
+    } else if (t.task_type === 'once') {
+      // 单次任务：检查日期
+      if (t.once_date === todayStr) {
+        shouldShowToday = true;
+      }
+    }
+
+    if (shouldShowToday) {
+      todayTasks.push({
+        ...t,
+        id: t._id || t.id
+      });
+    }
+  }
+
+  return todayTasks;
+}
+
+function renderToday(tasks, upcoming) {
+  const doneCnt = tasks.filter(t => t.status === 'done').length;
+  document.getElementById('statTotal').textContent = tasks.length;
+  document.getElementById('statDone').textContent = doneCnt;
+  document.getElementById('statUpcoming').textContent = upcoming.length;
+  document.getElementById('todayBadge').textContent = tasks.length;
+  document.getElementById('upcomingBadge').textContent = upcoming.length;
+
+  const tl = document.getElementById('todayList');
+  tl.innerHTML = tasks.length === 0
+    ? `<div class="empty-state"><div class="empty-icon">🎉</div>今日无待办，轻松一天！</div>`
+    : tasks.map(t => taskItemHTML(t, true)).join('');
+
+  const ul = document.getElementById('upcomingList');
+  ul.innerHTML = upcoming.length === 0
+    ? `<div class="empty-state" style="padding:12px"><div class="empty-icon">✅</div>近7天无特别提醒</div>`
+    : upcoming.map(u => `<div class="upcoming-item">
+        <div class="upcoming-when ${u.diff_days===0?'today-label':u.diff_days===1?'tomorrow-label':''}">${u.diff_label}</div>
+        <div style="flex:1">
+          <div style="font-size:14px;color:var(--text)">${escHtml(u.title)}</div>
+          <div style="font-size:12px;color:var(--text-muted)">${u.date}</div>
+        </div>
+        ${tagsHTML(u.tags)}
+      </div>`).join('');
+}
+
+async function loadAllSchedule() {
+  try {
+    // 检查是否登录
+    if (!currentOpenid) {
+      console.log('用户未登录,跳过加载所有日程');
+      document.getElementById('allScheduleList').innerHTML = `<div class="empty-state"><div class="empty-icon">🔒</div><div>请先登录</div></div>`;
+      return;
+    }
+
+    console.log('加载所有日程, currentOpenid:', currentOpenid);
+
+    const r = await db.collection('pa_schedules').where({ author_id: currentOpenid }).get();
+    console.log('查询结果:', r);
+
+    if (r.code) { throw new Error(r.message || '查询失败'); }
+    const tasks = r.data || [];
+
+    console.log('所有任务:', tasks.length);
+
+    const ORDER = ['yearly','monthly','weekly','daily','once'];
+    const LABELS = { yearly:'📆 每年（纪念日/节假日）', monthly:'🗓️ 每月', weekly:'📋 每周', daily:'☀️ 每日', once:'📍 单次' };
+    const groups = {};
+    for (const t of tasks) groups[t.task_type] = [...(groups[t.task_type]||[]), t];
+    let html = '';
+    for (const type of ORDER) {
+      if (!groups[type]) continue;
+      html += `<div class="type-section">
+        <div class="type-section-title">${LABELS[type]} <span class="badge">${groups[type].length}</span></div>
+        <div class="task-list">${groups[type].map(t => taskItemHTML(t, false)).join('')}</div>
+      </div>`;
+    }
+    document.getElementById('allScheduleList').innerHTML = html || `<div class="empty-state"><div class="empty-icon">📭</div>暂无日程</div>`;
+  } catch(e) {
+    console.error('loadAllSchedule error:', e);
+    document.getElementById('allScheduleList').innerHTML = `<div class="empty-state">加载失败: ${e.message}</div></div>`;
+  }
+}
+
+function taskItemHTML(t, showCheck) {
+  const id = t._id || t.id;
+  const isDone = t.status === 'done';
+  return `<div class="task-item ${isDone?'done':''}" id="task-${id}">
+    ${showCheck ? `<div class="task-check ${isDone?'checked':''}" onclick="toggleTask('${id}','${t.status}')"></div>` : ''}
+    <div class="task-body">
+      <div class="task-title">${escHtml(t.title)}</div>
+      <div class="task-meta">
+        ${t.description ? `<span class="task-desc">${escHtml(t.description)}</span>` : ''}
+        ${tagsHTML(t.tags)}
+        <span class="task-type-badge type-${t.task_type}">${typeLabel(t.task_type)}</span>
+      </div>
+    </div>
+    <div class="task-actions">
+      <button class="btn-del" onclick="deleteTask('${id}')" title="删除">✕</button>
+    </div>
+  </div>`;
+}
+function typeLabel(t) { return {yearly:'每年',monthly:'每月',weekly:'每周',daily:'每日',once:'单次'}[t]||t; }
+function tagsHTML(tags) { return (tags||[]).map(t=>`<span class="tag">${escHtml(t)}</span>`).join(''); }
+
+async function toggleTask(id, currentStatus) {
+  const newStatus = currentStatus === 'done' ? 'pending' : 'done';
+  const r = await db.collection('pa_schedules').doc(id).update({ status: newStatus });
+  if (typeof r.code === 'string') { toast('操作失败', 'error'); return; }
+  toast(newStatus === 'done' ? '已完成' : '已重置', 'success');
+  loadToday();
+}
+
+async function deleteTask(id) {
+  if (!confirm('确认删除该任务？')) return;
+  const r = await db.collection('pa_schedules').doc(id).remove();
+  if (typeof r.code === 'string') { toast('删除失败', 'error'); return; }
+  toast('已删除', 'success'); loadToday();
+  if (activeTab === 'all') loadAllSchedule();
+}
+
+async function quickAddTask() {
+  if (!currentOpenid) {
+    toast('请先登录', 'error');
+    showLoginModal();
+    return;
+  }
+  const input = document.getElementById('quickAddInput');
+  const title = input.value.trim();
+  if (!title) { input.focus(); return; }
+  const today = new Date().toISOString().slice(0, 10);
+  const r = await db.collection('pa_schedules').add({
+    title, task_type: 'once', once_date: today,
+    description: '', tags: [], remind_days_before: 0,
+    status: 'pending', created_at: Date.now(),
+    author_id: currentOpenid
+  });
+  if (typeof r.code === 'string') { toast('添加失败: ' + r.message, 'error'); return; }
+  toast('✅ 已添加：' + title, 'success');
+  input.value = ''; loadToday();
+}
+
+// ── 添加日程弹窗 ──
+function showAddModal() { document.getElementById('addModal').classList.add('show'); onTypeChange(); }
+function closeAddModal() { document.getElementById('addModal').classList.remove('show'); }
+function closeModal(e) { if (e.target.id === 'addModal') closeAddModal(); }
+
+function onTypeChange() {
+  const type = document.getElementById('fType').value;
+  const df = document.getElementById('dynamicFields');
+  if (type === 'yearly') {
+    df.innerHTML = `<div class="form-row form-group">
+      <div><label class="form-label">月份</label>
+        <select class="form-select" id="fMonth">${Array.from({length:12},(_,i)=>`<option value="${i+1}">${i+1}月</option>`).join('')}</select></div>
+      <div><label class="form-label">日期</label>
+        <select class="form-select" id="fDay">${Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}日</option>`).join('')}</select></div>
+    </div>`;
+  } else if (type === 'monthly') {
+    df.innerHTML = `<div class="form-group"><label class="form-label">每月第几天（-1=最后一天）</label>
+      <input class="form-input" id="fMonthDay" type="number" min="-1" max="31" value="1" /></div>`;
+  } else if (type === 'weekly') {
+    const days = ['周一','周二','周三','周四','周五','周六','周日'];
+    df.innerHTML = `<div class="form-group"><label class="form-label">选择星期</label>
+      <div class="weekday-checkboxes">${days.map((d,i)=>
+        `<input type="checkbox" class="weekday-cb" id="wd${i}" value="${i}"><label class="weekday-label" for="wd${i}">${d}</label>`
+      ).join('')}</div></div>`;
+  } else if (type === 'once') {
+    df.innerHTML = `<div class="form-group"><label class="form-label">日期</label>
+      <input class="form-input" id="fOnceDate" type="date" value="${new Date().toISOString().slice(0,10)}" /></div>`;
+  } else { df.innerHTML = ''; }
+}
+
+async function submitTask() {
+  if (!currentOpenid) {
+    toast('请先登录', 'error');
+    closeAddModal();
+    showLoginModal();
+    return;
+  }
+  const title  = document.getElementById('fTitle').value.trim();
+  const type   = document.getElementById('fType').value;
+  const desc   = document.getElementById('fDesc').value.trim();
+  const tags   = document.getElementById('fTags').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const remind = parseInt(document.getElementById('fRemind').value)||0;
+  if (!title) { toast('请输入任务标题', 'error'); return; }
+
+  const doc = {
+    title, task_type: type, description: desc, tags, remind_days_before: remind,
+    status: 'pending', created_at: Date.now(), author_id: currentOpenid
+  };
+  if (type === 'yearly') { doc.yearly_month = parseInt(document.getElementById('fMonth').value); doc.yearly_day = parseInt(document.getElementById('fDay').value); }
+  else if (type === 'monthly') { doc.monthly_day = parseInt(document.getElementById('fMonthDay').value); }
+  else if (type === 'weekly') {
+    doc.weekly_days = [...document.querySelectorAll('.weekday-cb:checked')].map(el=>parseInt(el.value));
+    if (!doc.weekly_days.length) { toast('请至少选择一天', 'error'); return; }
+  } else if (type === 'once') {
+    doc.once_date = document.getElementById('fOnceDate').value;
+    if (!doc.once_date) { toast('请选择日期', 'error'); return; }
+  }
+
+  const r = await db.collection('pa_schedules').add(doc);
+  if (typeof r.code === 'string') { toast('添加失败: '+r.message, 'error'); return; }
+  toast('✅ 添加成功：' + title, 'success');
+  closeAddModal();
+  ['fTitle','fDesc','fTags'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fRemind').value='0';
+  loadToday();
+  if (activeTab === 'all') loadAllSchedule();
+}
+
+// ================================================================
+//  广场功能
+// ================================================================
+const PLAZA_PAGE = 20;
+let plazaLastId = null;
+let plazaInited = false;
+
+async function initPlaza() {
+  if (plazaInited) return;
+  plazaInited = true;
+  await loadPosts(true);
+  await checkDayLimit();
+}
+
+function onPlazaInput() {
+  const txt = document.getElementById('plazaText').value;
+  const len = txt.length;
+  const cc = document.getElementById('charCount');
+  cc.textContent = `${len} / 200`;
+  cc.className = 'plaza-char-count' + (len > 180 ? ' warn' : '') + (len > 200 ? ' over' : '');
+  document.getElementById('btnPost').disabled = len === 0 || len > 200;
+}
+
+async function checkDayLimit() {
+  if (!currentOpenid) return;
+  document.getElementById('limitSpinner').style.display = '';
+  const today = new Date().toISOString().slice(0, 10);
+  const r = await db.collection('pa_world_posts').where({
+    post_type: 'world',
+    created_date: today
+  }).count();
+  document.getElementById('limitSpinner').style.display = 'none';
+  const cnt = r.total || 0;
+  const used = cnt >= 1;
+  document.getElementById('dayLimitText').innerHTML = used
+    ? `<span class="day-limit-used">✅ 今日广场已发言</span>`
+    : `今日广场发言：0 / 1`;
+  document.getElementById('btnPost').disabled = used;
+  if (used) document.getElementById('plazaText').placeholder = '今日广场消息已发送，明天再来吧～';
+}
+
+async function submitPost() {
+  const txt = document.getElementById('plazaText').value.trim();
+  if (!txt || txt.length > 200) return;
+  document.getElementById('btnPost').disabled = true;
+  const today = new Date().toISOString().slice(0, 10);
+  const displayName = getUserDisplayName(currentUser);
+  const r = await db.collection('pa_world_posts').add({
+    content: txt,
+    post_type: 'world',
+    author_name: displayName,
+    author_id: currentOpenid,
+    likes: [],
+    created_at: Date.now(),
+    created_date: today,
+  });
+  if (typeof r.code === 'string') { toast('发布失败: '+r.message, 'error'); document.getElementById('btnPost').disabled = false; return; }
+  toast('✅ 已发布', 'success');
+  document.getElementById('plazaText').value = '';
+  onPlazaInput();
+  plazaInited = false; plazaLastId = null;
+  await loadPosts(true);
+  await checkDayLimit();
+}
+
+async function loadPosts(reset = false) {
+  if (reset) { plazaLastId = null; document.getElementById('plazaList').innerHTML = ''; }
+  // 先获取拉黑列表
+  const blockR = await db.collection('pa_blocklist').get();
+  const blocked = new Set((blockR.data||[]).map(b => b.blocked_id));
+
+  let q = db.collection('pa_world_posts')
+    .where({ post_type: 'world' })
+    .orderBy('created_at', 'desc')
+    .limit(PLAZA_PAGE);
+  if (plazaLastId) q = q.where({ _id: _.lt(plazaLastId) });
+
+  const r = await q.get();
+  if (typeof r.code === 'string') { toast('加载失败', 'error'); return; }
+  const posts = (r.data || []).filter(p => !blocked.has(p.author_id));
+
+  const container = document.getElementById('plazaList');
+  if (posts.length === 0 && reset) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">🌍</div>广场还没有内容，来发第一条吧！</div>`;
+  } else {
+    container.insertAdjacentHTML('beforeend', posts.map(p => postCardHTML(p)).join(''));
+  }
+  plazaLastId = posts.length > 0 ? posts[posts.length-1]._id : plazaLastId;
+  document.getElementById('plazaLoadMore').style.display = posts.length >= PLAZA_PAGE ? '' : 'none';
+}
+
+async function loadMorePosts() { await loadPosts(false); }
+
+function postCardHTML(p) {
+  const isMine = p.author_id === currentOpenid;
+  const likes = p.likes || [];
+  const liked = likes.includes(currentOpenid);
+  const color = hashColor(p.author_id || '');
+  const letter = avatarLetter(p.author_name);
+  return `<div class="post-card" id="post-${p._id}">
+    <div class="post-header">
+      <div class="post-avatar" style="background:${color}">${letter}</div>
+      <div>
+        <div class="post-name">${escHtml(p.author_name || '用户')}</div>
+        <div class="post-time">${timeAgo(p.created_at)}</div>
+      </div>
+      ${isMine ? '<span class="post-tag-self">我</span>' : ''}
+    </div>
+    <div class="post-body">${escHtml(p.content)}</div>
+    <div class="post-footer">
+      <button class="post-action ${liked?'liked':''}" onclick="toggleLike('${p._id}')">
+        ${liked?'❤️':'🤍'} ${likes.length || 0}
+      </button>
+      ${!isMine ? `<button class="post-action" onclick="blockUser('${p.author_id}','${escHtml(p.author_name||'用户')}')">🚫 拉黑</button>` : ''}
+      ${isMine ? `<button class="post-action mine-post" onclick="deletePost('${p._id}')">🗑️ 删除</button>` : ''}
+    </div>
+  </div>`;
+}
+
+async function toggleLike(postId) {
+  if (!currentOpenid) return;
+  const r = await db.collection('pa_world_posts').doc(postId).get();
+  if (typeof r.code === 'string') return;
+  const post = r.data;
+  const likes = post.likes || [];
+  const idx = likes.indexOf(currentOpenid);
+  if (idx > -1) likes.splice(idx, 1); else likes.push(currentOpenid);
+  await db.collection('pa_world_posts').doc(postId).update({ likes });
+  // 刷新该卡片
+  const card = document.getElementById('post-'+postId);
+  if (card) {
+    const updated = { ...post, _id: postId, likes };
+    card.outerHTML = postCardHTML(updated);
+  }
+}
+
+async function blockUser(userId, userName) {
+  if (!confirm(`确认拉黑 ${userName}？拉黑后将不再看到其广场消息。`)) return;
+  const r = await db.collection('pa_blocklist').add({ blocked_id: userId, blocked_name: userName, created_at: Date.now() });
+  if (typeof r.code === 'string') { toast('操作失败', 'error'); return; }
+  toast(`已拉黑 ${userName}`, 'success');
+  plazaInited = false; plazaLastId = null;
+  await loadPosts(true);
+}
+
+async function deletePost(postId) {
+  if (!confirm('确认删除这条广场消息？')) return;
+  const r = await db.collection('pa_world_posts').doc(postId).remove();
+  if (typeof r.code === 'string') { toast('删除失败', 'error'); return; }
+  toast('已删除', 'success');
+  document.getElementById('post-'+postId)?.remove();
+  plazaInited = false;
+  await checkDayLimit();
+}
+
+// ================================================================
+//  用户配置（CloudBase 存储个人设置）
+// ================================================================
+async function loadUserConfig() {
+  if (!currentOpenid) return;
+  try {
+    const r = await db.collection('pa_user_config').where({
+      author_id: currentOpenid
+    }).limit(1).get();
+
+    if (r.code && typeof r.code === 'string') {
+      console.error('Load config error:', r);
+      return;
+    }
+
+    if (r.data && r.data.length > 0) {
+      const conf = r.data[0];
+      // 加载昵称
+      if (conf.nickname) {
+        if (!currentUser.user_metadata) {
+          currentUser.user_metadata = {};
+        }
+        currentUser.user_metadata.custom_name = conf.nickname;
+        updateUserUI();
+      }
+      // 加载城市配置
+      if (conf.city) document.getElementById('cityInput').value = conf.city;
+      if (conf.city) await api('PUT', '/weather/city', { city: conf.city }).catch(()=>{});
+      // 加载提醒天数
+      if (conf.remind_days_before !== undefined) {
+        document.getElementById('sRemindDays').value = conf.remind_days_before;
+      }
+    }
+  } catch(e) {
+    console.error('loadUserConfig error:', e);
+  }
+}
+
+async function saveUserConfig(patch) {
+  if (!currentOpenid) return;
+  const r = await db.collection('pa_user_config').where({
+    author_id: currentOpenid
+  }).limit(1).get();
+
+  if (r.code && typeof r.code === 'string') {
+    console.error('Save config query error:', r);
+    return;
+  }
+
+  const patchWithAuthor = { ...patch, author_id: currentOpenid };
+
+  if (r.data && r.data.length > 0) {
+    await db.collection('pa_user_config').doc(r.data[0]._id).update(patch);
+  } else {
+    await db.collection('pa_user_config').add({ ...patchWithAuthor, created_at: Date.now() });
+  }
+}
+
+// ================================================================
+//  设置面板
+// ================================================================
+async function showSettings() {
+  document.getElementById('settingsOverlay').classList.add('show');
+  const res = await api('GET', '/config');
+  if (res.code === 0) {
+    document.getElementById('sCity').value = res.data.city || '';
+    document.getElementById('sRemindDays').value = res.data.remind_days_before ?? 3;
+  }
+  loadHealth();
+}
+function closeSettings(e) {
+  if (!e || e.target.id === 'settingsOverlay') document.getElementById('settingsOverlay').classList.remove('show');
+}
+async function saveSettings() {
+  const city = document.getElementById('sCity').value.trim();
+  const days = parseInt(document.getElementById('sRemindDays').value)||3;
+  await saveUserConfig({ city, remind_days_before: days });
+  const res = await api('PUT', '/config', { city, remind_days_before: days });
+  if (res.code === 0) { toast('配置已保存', 'success'); loadWeather(); }
+  else toast('保存失败', 'error');
+}
+async function loadHealth() {
+  const res = await api('GET', '/health');
+  if (res.code !== 0) return;
+  document.getElementById('healthPanel').innerHTML = Object.entries(res.data).map(([name, info]) =>
+    `<div style="display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid var(--border)">
+      <span style="color:${info.running?'var(--green)':'var(--red)'}">${info.running?'✅':'❌'}</span>
+      <span style="font-weight:600">${name}</span>
+      <span style="color:var(--text-muted);font-size:11px">${info.running?'运行中':'已停止'}</span>
+    </div>`).join('');
+}
+
+// ================================================================
+//  初始化应用
+// ================================================================
+function initApp() {
+  loadWeather();
+  // 只有在用户登录后才加载数据
+  if (currentOpenid) {
+    loadToday();
+    loadUserConfig();
+  }
+  setInterval(() => {
+    loadWeather();
+    if (currentOpenid) {
+      loadToday();
+    }
+  }, 5 * 60 * 1000);
+}
+
+// 启动认证监听（onAuthStateChange 已在上面注册）
+// 检查初始 session
+(async () => {
+  const { data } = await auth.getSession();
+  if (!data?.session) {
+    showLoginModal();
+  }
+})();
+</script>
+</body>
+</html>

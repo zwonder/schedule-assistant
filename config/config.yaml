@@ -1,0 +1,16 @@
+app:
+  data_dir: data
+  host: 127.0.0.1
+  name: 个人工作助理
+  port: 5001
+  version: 1.0.0
+notification:
+  method: console
+schedule:
+  daily_remind_time: 08:30
+  data_file: data/schedule.json
+  remind_days_before: 3
+weather:
+  city: Shizuishan
+  remind_time: 08:30
+  unit: celsius

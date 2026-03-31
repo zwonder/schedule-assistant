@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>数据库诊断工具</title>
+</head>
+<body>
+  <h1>CloudBase 数据库诊断工具</h1>
+
+  <div id="logs"></div>
+
+  <script src="https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js"></script>
+  <script>
+    const ENV_ID = 'zwonder-8gq5j7i479378123';
+    const REGION = 'ap-shanghai';
+    const ACCESS_KEY = 'eyJhbGciOiJSUzI1NiIsImtpZCI6IjlkMWRjMzFlLWI0ZDAtNDQ4Yi1hNzZmLWIwY2M2M2Q4MTQ5OCJ9.eyJpc3MiOiJodHRwczovL3p3b25kZXItOGdxNWo3aTQ3OTM3ODEyMy5hcC1zaGFuZ2hhaS50Y2ItYXBpLnRlbmNlbnRjbG91ZGFwaS5jb20iLCJzdWIiOiJhbm9uIiwiYXVkIjoiendvbmRlci04Z3E1ajdpNDc5Mzc4MTIzIiwiZXhwIjo0MDc4NjA1NjEyLCJpYXQiOjE3NzQ5MjI0MTIsIm5vbmNlIjoiRkhPTVhDVXdUdXU4X1lxS181bzgydyIsImF0X2hhc2giOiJGSE9NWENVd1R1dThfWXFLXzVvODJ3IiwibmFtZSI6IkFub255bW91cyIsInNjb3BlIjoiYW5vbnltb3VzIiwicHJvamVjdF9pZCI6Inp3b25kZXItOGdxNWo3aTQ3OTM3ODEyMyIsIm1ldGEiOnsicGxhdGZvcm0iOiJQdWJsaXNoYWJsZUtleSJ9LCJ1c2VyX3R5cGUiOiIiLCJjbGllbnRfdHlwZSI6ImNsaWVudF91c2VyIiwiaXNfc3lzdGVtX2FkbWluIjpmYWxzZX0.PBDhXoc0scYmgc_6qXOpNUwMkmHno2geZOUFccph7l3VmNDK_kmwLhvwVH_k34a3P7F_5XlBt3lcsdC3lnJLp8ya_y1gIm77KnwWyHgY4k2PXTD1oz7HZavAcJnvrfnNZAoujNC5HUDstnysSKc3cN2xAoEpQxtiKiIXme6Zpumdtso44hoRavysIBktKDhsMZK5_eJHifw5gaycFhugy-psKYJ50ZvpioOhNzgi9IezVCffoAkGfRmbOMw_GNRnnBeryIiHxSkGqOBWVH5LaksfjynHFOVjYRfxBuZzCyFPkOoL-_bD7sKQsIFxgQFGLF1kitGLDGXsX2VGeoZIfw';
+
+    function log(msg, type = 'info') {
+      const div = document.createElement('div');
+      div.style.padding = '5px';
+      div.style.borderBottom = '1px solid #eee';
+      div.innerHTML = `<span style="color:${type === 'error' ? 'red' : type === 'success' ? 'green' : 'blue'}">[${type.toUpperCase()}]</span> ${msg}`;
+      document.getElementById('logs').appendChild(div);
+      console.log(msg);
+    }
+
+    async function test() {
+      log('开始诊断...', 'info');
+
+      try {
+        // 1. 初始化CloudBase
+        log('1. 初始化CloudBase SDK...', 'info');
+        const cbApp = cloudbase.init({ env: ENV_ID, region: REGION, accessKey: ACCESS_KEY, auth: { detectSessionInUrl: true } });
+        const auth = cbApp.auth;
+        const db = cbApp.database();
+        log('✓ SDK初始化成功', 'success');
+
+        // 2. 检查登录状态
+        log('2. 检查登录状态...', 'info');
+        const { data: session } = await auth.getSession();
+        if (!session?.session) {
+          log('未登录,尝试匿名登录...', 'info');
+          const { data: loginData, error: loginError } = await auth.signInAnonymously();
+          if (loginError) {
+            log('匿名登录失败: ' + loginError.message, 'error');
+            return;
+          }
+          log('✓ 匿名登录成功', 'success');
+        } else {
+          log('✓ 已登录', 'success');
+        }
+
+        // 3. 获取当前用户
+        const { data: user } = await auth.currentUser;
+        log('当前用户: ' + JSON.stringify(user), 'info');
+
+        // 4. 测试数据库查询 - 无条件查询
+        log('3. 测试数据库查询(无条件)...', 'info');
+        const r1 = await db.collection('pa_schedules').get();
+        log('查询结果(无条件): ' + JSON.stringify(r1), 'info');
+
+        if (r1.code) {
+          log('✗ 无条件查询失败: ' + r1.message, 'error');
+        } else {
+          log('✓ 无条件查询成功,找到 ' + r1.data.length + ' 条记录', 'success');
+        }
+
+        // 5. 测试数据库查询 - 带条件查询
+        log('4. 测试数据库查询(带author_id条件)...', 'info');
+        const r2 = await db.collection('pa_schedules').where({ author_id: user.id }).get();
+        log('查询结果(带条件): ' + JSON.stringify(r2), 'info');
+
+        if (r2.code) {
+          log('✗ 带条件查询失败: ' + r2.message, 'error');
+        } else {
+          log('✓ 带条件查询成功,找到 ' + r2.data.length + ' 条记录', 'success');
+        }
+
+        // 6. 测试添加数据
+        log('5. 测试添加数据...', 'info');
+        const testDoc = {
+          title: '测试任务',
+          task_type: 'once',
+          once_date: new Date().toISOString().slice(0, 10),
+          status: 'pending',
+          created_at: Date.now(),
+          author_id: user.id
+        };
+
+        const r3 = await db.collection('pa_schedules').add(testDoc);
+        log('添加结果: ' + JSON.stringify(r3), 'info');
+
+        if (typeof r3.code === 'string') {
+          log('✗ 添加数据失败: ' + r3.message, 'error');
+        } else {
+          log('✓ 添加数据成功, ID: ' + r3.id, 'success');
+
+          // 删除测试数据
+          await db.collection('pa_schedules').doc(r3.id).remove();
+          log('✓ 测试数据已清理', 'success');
+        }
+
+        // 7. 显示诊断建议
+        log('========================================', 'info');
+        log('诊断建议:', 'info');
+
+        if (r1.code) {
+          log('❌ 安全规则可能完全禁止了read操作', 'error');
+          log('建议: 检查安全规则中"read"字段的配置', 'info');
+        } else {
+          log('✅ 无条件查询成功', 'success');
+        }
+
+        if (r2.code) {
+          log('❌ 安全规则中"read"条件可能有问题', 'error');
+          log('建议: 检查规则中的 auth.openid 字段名是否正确', 'info');
+          log('当前用户ID: ' + user.id, 'info');
+          log('数据文档应该包含 author_id 字段,值应该是: ' + user.id, 'info');
+        } else {
+          log('✅ 带条件查询成功', 'success');
+        }
+
+        if (typeof r3.code === 'string') {
+          log('❌ 安全规则中"create"操作可能有问题', 'error');
+          log('建议: 检查规则中"create"字段的配置', 'info');
+        } else {
+          log('✅ 添加数据成功', 'success');
+        }
+
+      } catch (e) {
+        log('诊断过程出错: ' + e.message, 'error');
+        log('详细错误: ' + e.stack, 'error');
+      }
+
+      log('========================================', 'info');
+      log('诊断完成!', 'info');
+    }
+
+    // 运行测试
+    test();
+  </script>
+</body>
+</html>

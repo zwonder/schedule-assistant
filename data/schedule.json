@@ -1,0 +1,157 @@
+{
+  "tasks": [
+    {
+      "id": "5fce51ea-1700-4551-96ce-7308446cb2ac",
+      "title": "元旦",
+      "task_type": "yearly",
+      "status": "pending",
+      "description": "元旦假期",
+      "tags": [
+        "节假日"
+      ],
+      "yearly_month": 1,
+      "yearly_day": 1,
+      "monthly_day": null,
+      "weekly_days": [],
+      "once_date": null,
+      "remind_days_before": 0,
+      "created_at": "2026-03-31T08:38:56.628504"
+    },
+    {
+      "id": "b58dc8a4-7f7b-43fb-95ef-9ff0d6a66a34",
+      "title": "春节",
+      "task_type": "yearly",
+      "status": "pending",
+      "description": "春节，农历新年（示例）",
+      "tags": [
+        "节假日"
+      ],
+      "yearly_month": 1,
+      "yearly_day": 29,
+      "monthly_day": null,
+      "weekly_days": [],
+      "once_date": null,
+      "remind_days_before": 7,
+      "created_at": "2026-03-31T08:38:56.628577"
+    },
+    {
+      "id": "e076e05e-dba3-4b50-b6a3-89e537468e2a",
+      "title": "劳动节",
+      "task_type": "yearly",
+      "status": "pending",
+      "description": "",
+      "tags": [
+        "节假日"
+      ],
+      "yearly_month": 5,
+      "yearly_day": 1,
+      "monthly_day": null,
+      "weekly_days": [],
+      "once_date": null,
+      "remind_days_before": 0,
+      "created_at": "2026-03-31T08:38:56.628589"
+    },
+    {
+      "id": "c0bb3a81-2337-43c2-b718-3e8a4448a790",
+      "title": "国庆节",
+      "task_type": "yearly",
+      "status": "pending",
+      "description": "",
+      "tags": [
+        "节假日"
+      ],
+      "yearly_month": 10,
+      "yearly_day": 1,
+      "monthly_day": null,
+      "weekly_days": [],
+      "once_date": null,
+      "remind_days_before": 3,
+      "created_at": "2026-03-31T08:38:56.628616"
+    },
+    {
+      "id": "da77b88f-eeae-4613-a4da-afd53229e3a3",
+      "title": "还房贷",
+      "task_type": "monthly",
+      "status": "pending",
+      "description": "每月25日还房贷，提前确认账户余额",
+      "tags": [
+        "财务"
+      ],
+      "yearly_month": null,
+      "yearly_day": null,
+      "monthly_day": 25,
+      "weekly_days": [],
+      "once_date": null,
+      "remind_days_before": 2,
+      "created_at": "2026-03-31T08:38:56.628658"
+    },
+    {
+      "id": "feaef210-0d76-4946-9b76-892a93020048",
+      "title": "提交周工作记录",
+      "task_type": "weekly",
+      "status": "pending",
+      "description": "每周五提交本周工作记录",
+      "tags": [
+        "工作"
+      ],
+      "yearly_month": null,
+      "yearly_day": null,
+      "monthly_day": null,
+      "weekly_days": [
+        4
+      ],
+      "once_date": null,
+      "remind_days_before": 0,
+      "created_at": "2026-03-31T08:38:56.628677"
+    },
+    {
+      "id": "143eed5e-3768-45d9-a7f6-cc2b74b28f7b",
+      "title": "喝足量的水",
+      "task_type": "daily",
+      "status": "pending",
+      "description": "每天至少喝8杯水",
+      "tags": [
+        "健康"
+      ],
+      "yearly_month": null,
+      "yearly_day": null,
+      "monthly_day": null,
+      "weekly_days": [],
+      "once_date": null,
+      "remind_days_before": 0,
+      "created_at": "2026-03-31T08:38:56.628686"
+    },
+    {
+      "id": "7ff4c845-e3ae-45dc-b30b-b6806c5cc4d9",
+      "title": "晨间计划",
+      "task_type": "daily",
+      "status": "pending",
+      "description": "每日早上整理今日待办事项",
+      "tags": [
+        "习惯"
+      ],
+      "yearly_month": null,
+      "yearly_day": null,
+      "monthly_day": null,
+      "weekly_days": [],
+      "once_date": null,
+      "remind_days_before": 0,
+      "created_at": "2026-03-31T08:38:56.628692"
+    },
+    {
+      "id": "32b1f056-e948-44b7-86d0-7e0c41006c78",
+      "title": "codebuddy项目发布",
+      "task_type": "once",
+      "status": "pending",
+      "description": "",
+      "tags": [],
+      "yearly_month": null,
+      "yearly_day": null,
+      "monthly_day": null,
+      "weekly_days": [],
+      "once_date": "2026-03-31",
+      "remind_days_before": 0,
+      "created_at": "2026-03-31T09:08:12.434147"
+    }
+  ]
+}

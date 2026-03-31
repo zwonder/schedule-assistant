@@ -1,0 +1,24 @@
+{
+  "rules": {
+    "pa_schedules": {
+      ".read": "auth != null",
+      ".create": "auth != null",
+      ".update": "auth != null && auth.uid == doc.author_id",
+      ".delete": "auth != null && auth.uid == doc.author_id"
+    },
+    "pa_user_config": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "pa_world_posts": {
+      ".read": "auth != null",
+      ".create": "auth != null",
+      ".update": "auth != null && (auth.uid == doc.author_id || auth.uid == doc.author_id)",
+      ".delete": "auth != null && auth.uid == doc.author_id"
+    },
+    "pa_blocklist": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    }
+  }
+}

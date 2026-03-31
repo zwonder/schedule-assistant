@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# CloudBase
+.cloudbaserc.json.local
+*.log
+
+# Database rules (may contain sensitive info)
+database.rules.json.local
+
+# Temporary files
+*.tmp
+temp/
