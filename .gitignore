@@ -26,6 +26,10 @@ Thumbs.db
 # Database rules (may contain sensitive info)
 database.rules.json.local
 
+# Docs (local use only)
+docs/
+01_需求规格说明书.md
+
 # Temporary files
 *.tmp
 temp/
