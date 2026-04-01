@@ -1,6 +1,6 @@
 {
-  "projectName": "20260331082707",
+  "projectName": "web",
   "projectId": "zwonder-8gq5j7i479378123",
-  "previewUrl": "https://personal-assistant-240653-4-1305999503.sh.run.tcloudbase.com",
-  "consoleUrl": "https://tcb.cloud.tencent.com/dev?envId=zwonder-8gq5j7i479378123#/platform-run/service/detail?serverName=personal-assistant&tabId=overview&envId=zwonder-8gq5j7i479378123"
+  "previewUrl": "https://zwonder-8gq5j7i479378123-1305999503.tcloudbaseapp.com/index.html",
+  "consoleUrl": "https://tcb.cloud.tencent.com/dev?envId=zwonder-8gq5j7i479378123#/static-hosting"
 }

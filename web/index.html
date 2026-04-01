@@ -203,8 +203,8 @@
     .account-name { font-size: 14px; font-weight: 600; color: var(--text); }
     .account-type { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
     .account-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-    .btn-bind-wx { display: flex; align-items: center; gap: 6px; padding: 7px 14px; background: #07c160; color: #fff; border: none; border-radius: 7px; font-size: 13px; cursor: pointer; }
-    .btn-bind-wx:hover { opacity: .88; }
+    .btn-bind-email { display: flex; align-items: center; gap: 6px; padding: 7px 14px; background: var(--accent); color: #fff; border: none; border-radius: 7px; font-size: 13px; cursor: pointer; }
+    .btn-bind-email:hover { opacity: .88; }
     .btn-logout { padding: 7px 14px; background: var(--bg2); color: var(--text-muted); border: 1px solid var(--border); border-radius: 7px; font-size: 13px; cursor: pointer; }
     .btn-logout:hover { color: var(--red); border-color: var(--red); }
     .btn-set-nick { padding: 7px 14px; background: var(--bg2); color: var(--text-muted); border: 1px solid var(--border); border-radius: 7px; font-size: 13px; cursor: pointer; }
@@ -214,10 +214,21 @@
     .login-modal { max-width: 360px; text-align: center; }
     .login-modal .modal-title { font-size: 20px; margin-bottom: 6px; }
     .login-subtitle { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
-    .btn-wx-login { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px; background: #07c160; color: #fff; border: none; border-radius: 10px; font-size: 15px; cursor: pointer; margin-bottom: 10px; transition: opacity .2s; }
-    .btn-wx-login:hover { opacity: .88; }
+    .btn-wx-login { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px; background: #07c160; color: #fff; border: none; border-radius: 10px; font-size: 15px; cursor: not-allowed; opacity: 0.6; margin-bottom: 10px; transition: opacity .2s; }
+    .btn-wx-login:hover { opacity: 0.5; }
+    .btn-wx-login::after { content: '（待开发）'; font-size: 12px; }
+    .btn-email-login { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px; background: var(--accent); color: #fff; border: none; border-radius: 10px; font-size: 14px; cursor: pointer; transition: opacity .2s; }
+    .btn-email-login:hover { opacity: .88; }
     .btn-anon-login { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px; background: var(--bg3); color: var(--text-muted); border: 1px solid var(--border); border-radius: 10px; font-size: 14px; cursor: pointer; transition: all .2s; }
     .btn-anon-login:hover { border-color: var(--accent); color: var(--text); }
+    .btn-primary { width: 100%; padding: 12px; background: var(--accent); color: #fff; border: none; border-radius: 10px; font-size: 15px; cursor: pointer; margin-top: 12px; }
+    .btn-primary:hover { opacity: .88; }
+    .btn-back { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 14px; }
+    .btn-back:hover { color: var(--text); }
+    .input-field { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; margin-top: 12px; box-sizing: border-box; }
+    .input-field:focus { outline: none; border-color: var(--accent); }
+    .btn-secondary { width: 100%; padding: 12px; background: var(--bg3); color: var(--text-muted); border: 1px solid var(--border); border-radius: 10px; font-size: 14px; cursor: pointer; }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--text); }
     .login-divider { font-size: 12px; color: var(--text-muted); margin: 12px 0; }
     .login-tip { font-size: 11px; color: var(--text-muted); margin-top: 16px; line-height: 1.6; }
 
@@ -317,7 +328,7 @@
       </div>
       <div style="margin-top:18px">
         <div class="section-header">
-          <span class="section-label">近期提醒（7日内）</span>
+          <span class="section-label">近期提醒</span>
           <span class="badge" id="upcomingBadge">0</span>
         </div>
         <div id="upcomingList"></div>
@@ -420,7 +431,7 @@
         </div>
         <div class="account-actions">
           <button class="btn-set-nick" onclick="promptSetNickname()">✏️ 设置昵称</button>
-          <button class="btn-bind-wx" id="btnBindWx" onclick="bindWeChat()" style="display:none">微信登录绑定</button>
+          <button class="btn-bind-email" id="btnBindEmail" onclick="showEmailLogin()" style="display:none">绑定邮箱</button>
           <button class="btn-logout" onclick="doLogout()">退出登录</button>
         </div>
       </div>
@@ -455,14 +466,42 @@
   <div class="modal login-modal">
     <div class="modal-title">🤖 欢迎使用</div>
     <div class="login-subtitle">登录后日程数据将永久保存并跨设备同步</div>
-    <button class="btn-wx-login" id="btnWxLogin" onclick="loginWithWeChat()">
+    <button class="btn-wx-login" id="btnWxLogin" onclick="showWxDisabled()">
       <span style="font-size:18px">💬</span> 微信一键登录
     </button>
     <div class="login-divider">— 或者 —</div>
-    <button class="btn-anon-login" onclick="loginAnonymously()">
-      <span>👤</span> 匿名体验（数据仅存当前设备）
+    <button class="btn-email-login" onclick="showEmailLogin()">
+      <span>📧</span> 邮箱注册 / 登录
     </button>
-    <div class="login-tip">匿名登录后可随时在设置中绑定微信账号，数据将自动合并。</div>
+    <div class="login-divider">— 试用 —</div>
+    <button class="btn-anon-login" onclick="loginAnonymously()">
+      <span>👤</span> 匿名体验
+    </button>
+    <div class="login-tip" style="color:var(--red)">⚠️ 匿名用户数据仅存本地，清除浏览器后数据将丢失</div>
+    <div class="login-tip">匿名登录后可随时在设置中绑定邮箱账号，数据将自动合并。</div>
+  </div>
+</div>
+
+<!-- ── 邮箱验证码登录弹窗 ── -->
+<div class="modal-overlay" id="emailLoginModal">
+  <div class="modal login-modal">
+    <div class="modal-title">📧 邮箱验证码登录</div>
+    <div class="login-subtitle" id="emailLoginSubtitle">登录后日程数据将永久保存</div>
+    
+    <!-- 第一步：输入邮箱 -->
+    <div id="emailStep1">
+      <input type="email" id="loginEmail" class="input-field" placeholder="请输入邮箱地址" />
+      <button class="btn-primary" id="btnSendCode" onclick="sendEmailCode()">发送验证码</button>
+    </div>
+    
+    <!-- 第二步：输入验证码 -->
+    <div id="emailStep2" style="display:none">
+      <input type="text" id="loginCode" class="input-field" placeholder="请输入邮箱收到的验证码" maxlength="6" />
+      <button class="btn-primary" id="btnVerifyCode" onclick="verifyEmailCode()">登录</button>
+      <button class="btn-secondary" onclick="backToEmailStep1()" style="margin-top:12px">← 重新输入邮箱</button>
+    </div>
+    
+    <button class="btn-back" onclick="backToLogin()" style="margin-top:16px">← 返回</button>
   </div>
 </div>
 
@@ -502,6 +541,48 @@ function toast(msg, type = '') {
 function escHtml(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
+
+// 计算任务下一次执行的日期
+function getNextDate(t, today) {
+  const y = today.getFullYear();
+  const m = today.getMonth() + 1;
+  const d = today.getDate();
+  const dayOfWeek = (today.getDay() + 6) % 7;
+
+  if (t.task_type === 'once') {
+    const od = new Date(t.once_date);
+    if (od >= today) return od;
+    return null; // 已过期
+  }
+  if (t.task_type === 'daily') return today;
+  if (t.task_type === 'yearly') {
+    let dt = new Date(y, t.yearly_month - 1, t.yearly_day);
+    if (dt < today) dt.setFullYear(y + 1);
+    return dt;
+  }
+  if (t.task_type === 'monthly') {
+    let day = t.monthly_day;
+    if (day === -1) {
+      const nextMonth = new Date(y, m, 1);
+      day = new Date(nextMonth - 1).getDate();
+    }
+    let dt = new Date(y, m - 1, day);
+    if (dt < today) {
+      dt = new Date(y, m, day);
+      if (dt < today) dt = new Date(y + 1, m - 1, day);
+    }
+    return dt;
+  }
+  if (t.task_type === 'weekly') {
+    if (!t.weekly_days) return null;
+    const days = t.weekly_days.map(Number).sort((a,b)=>a-b);
+    for (const wd of days) {
+      if (wd > dayOfWeek) return new Date(today.getFullYear(), today.getMonth(), today.getDate() + (wd - dayOfWeek));
+    }
+    return new Date(today.getFullYear(), today.getMonth(), today.getDate() + (7 - dayOfWeek + days[0]));
+  }
+  return null;
+}
 function timeAgo(ts) {
   const diff = (Date.now() - ts) / 1000;
   if (diff < 60) return '刚刚';
@@ -516,7 +597,8 @@ function avatarLetter(name) {
 function hashColor(str) {
   const colors = ['#5c7cfa','#74c0fc','#51cf66','#ffd43b','#ff922b','#f783ac','#cc5de8','#20c997'];
   let h = 0;
-  for (let c of (str||'')) h = (h*31 + c.charCodeAt(0)) % colors.length;
+  const s = String(str || '');
+  for (let c of s) h = (h*31 + c.charCodeAt(0)) % colors.length;
   return colors[h];
 }
 
@@ -570,6 +652,99 @@ async function loginWithWeChat() {
   } catch(e) {
     toast('微信登录暂未配置，请使用匿名登录', 'error');
   }
+}
+
+function showWxDisabled() {
+  toast('微信登录待开发，敬请期待', 'error');
+}
+
+let emailAuthMode = 'login'; // 'login' or 'register'
+
+function showEmailLogin() {
+  emailAuthMode = 'login';
+  resetEmailLogin();
+  document.getElementById('emailLoginModal').classList.add('show');
+}
+
+function backToLogin() {
+  document.getElementById('emailLoginModal').classList.remove('show');
+  resetEmailLogin();
+}
+
+// 重置邮箱登录状态
+function resetEmailLogin() {
+  document.getElementById('emailStep1').style.display = '';
+  document.getElementById('emailStep2').style.display = 'none';
+  document.getElementById('loginEmail').value = '';
+  document.getElementById('loginCode').value = '';
+}
+
+function backToEmailStep1() {
+  document.getElementById('emailStep1').style.display = '';
+  document.getElementById('emailStep2').style.display = 'none';
+  document.getElementById('loginCode').value = '';
+}
+
+let emailVerifyFn = null; // 保存验证码验证函数
+let pendingOldOpenid = null; // 待绑定的旧用户ID
+
+// 第一步：发送邮箱验证码
+async function sendEmailCode() {
+  const email = document.getElementById('loginEmail').value.trim();
+  if (!email) {
+    toast('请输入邮箱地址', 'error');
+    return;
+  }
+  if (!email.includes('@')) {
+    toast('请输入有效的邮箱地址', 'error');
+    return;
+  }
+
+  try {
+    // 记录绑定前的旧ID（如果有匿名登录且有数据）
+    pendingOldOpenid = currentOpenid;
+    
+    const { data, error } = await auth.signInWithOtp({ email });
+    if (error) throw error;
+    
+    emailVerifyFn = data.verifyOtp;
+    document.getElementById('emailStep1').style.display = 'none';
+    document.getElementById('emailStep2').style.display = '';
+    toast('验证码已发送到邮箱', 'success');
+  } catch(e) {
+    pendingOldOpenid = null; // 失败时清除
+    toast('发送失败: ' + (e.message || e), 'error');
+  }
+}
+
+// 第二步：验证验证码并登录
+async function verifyEmailCode() {
+  const code = document.getElementById('loginCode').value.trim();
+  if (!code || code.length < 4) {
+    toast('请输入收到的验证码', 'error');
+    return;
+  }
+
+  if (!emailVerifyFn) {
+    toast('请先发送验证码', 'error');
+    return;
+  }
+
+  try {
+    const { data, error } = await emailVerifyFn({ token: code });
+    if (error) throw error;
+    
+    toast('登录成功', 'success');
+    hideEmailLogin();
+    hideLoginModal();
+  } catch(e) {
+    toast('验证失败: ' + (e.message || e), 'error');
+  }
+}
+
+function hideEmailLogin() {
+  document.getElementById('emailLoginModal').classList.remove('show');
+  resetEmailLogin();
 }
 
 async function bindWeChat() {
@@ -636,6 +811,16 @@ async function promptSetNickname() {
 async function refreshUser() {
   const { data } = await auth.getUser();
   currentUser = data?.user || null;
+  if (currentUser) {
+    console.log('refreshUser - id:', currentUser.id);
+  }
+
+  // 检查 session 中的 openid
+  const { data: sessData } = await auth.getSession();
+  if (sessData?.session) {
+    console.log('refreshUser - session.sub:', sessData.session.sub);
+  }
+
   updateUserUI();
 }
 
@@ -664,12 +849,13 @@ function updateUserUI() {
 
   // 设置侧栏
   document.getElementById('settingsName').textContent = name;
-  document.getElementById('settingsType').textContent = isAnon ? '匿名用户（可绑定微信）' : '已登录用户';
+  document.getElementById('settingsType').textContent = isAnon ? '匿名用户（可绑定邮箱）' : '已登录用户';
   const sa = document.getElementById('settingsAvatar');
   sa.textContent = letter; sa.style.background = color;
-  document.getElementById('btnBindWx').style.display = isAnon ? '' : 'none';
+  document.getElementById('btnBindEmail').style.display = isAnon ? '' : 'none';
 
-  currentOpenid = u?.id || null;
+  // 获取用户ID (v2 SDK: sub可能是函数)
+  currentOpenid = (typeof u?.sub === 'function') ? u.sub() : (u?.uid || u?.id || null);
 }
 
 // 监听认证状态变化
@@ -816,69 +1002,78 @@ async function loadToday() {
 function computeUpcoming(tasks, todayStr, days) {
   const result = [];
   const today = new Date(todayStr);
-  const seenIds = new Set(); // 用于去重
+  const seenIds = new Set();
 
+  // 遍历今天到 today+days 天
   for (let i = 0; i <= days; i++) {
     const d = new Date(today);
     d.setDate(today.getDate() + i);
     const ds = d.toISOString().slice(0, 10);
-    const wd = (d.getDay() + 6) % 7; // 0=Mon...6=Sun
-    const m = d.getMonth() + 1;
-    const day = d.getDate();
 
     for (const t of tasks) {
-      const remind = t.remind_days_before || 0;
+      if (seenIds.has(t._id)) continue;
 
-      // 检查是否应该在提醒日显示
+      const remind = t.remind_days_before || 0;
+      if (remind <= 0) continue;  // 没有设置提前提醒
+
+      let targetDate = null;
       let shouldRemind = false;
 
       if (t.task_type === 'yearly') {
-        // 年任务：在提醒日前显示
-        const targetDate = new Date(d.getFullYear(), t.yearly_month - 1, t.yearly_day);
-        const diffDays = Math.round((targetDate - d) / 86400000);
-        if (diffDays >= 0 && diffDays <= remind && remind > 0) {
+        // 年任务：目标日期是每年的 月-日
+        targetDate = new Date(d.getFullYear(), t.yearly_month - 1, t.yearly_day);
+        // 计算提醒开始日期 = 目标日期 - 提前天数
+        const remindStartDate = new Date(targetDate);
+        remindStartDate.setDate(targetDate.getDate() - remind);
+        // 如果提醒开始日期已过去，从今天开始
+        const effectiveStart = remindStartDate < today ? today : remindStartDate;
+        // 只在提醒开始日期当天显示
+        if (effectiveStart.getTime() === d.getTime()) {
           shouldRemind = true;
         }
       } else if (t.task_type === 'monthly') {
-        // 月任务：在提醒日前显示
+        // 月任务：目标日期是每月的第几天
         const targetDay = t.monthly_day;
-        let isReminderDay = false;
         if (targetDay === -1) {
           // 每月最后一天
           const nextMonth = new Date(d.getFullYear(), d.getMonth() + 1, 1);
-          const lastDay = new Date(nextMonth - 1);
-          if (d.getDate() === lastDay.getDate()) {
-            isReminderDay = true;
-          }
-        } else if (targetDay === day) {
-          isReminderDay = true;
+          targetDate = new Date(nextMonth - 1);
+        } else {
+          targetDate = new Date(d.getFullYear(), d.getMonth(), targetDay);
         }
-        if (isReminderDay) {
+        const remindStartDate = new Date(targetDate);
+        remindStartDate.setDate(targetDate.getDate() - remind);
+        const effectiveStart = remindStartDate < today ? today : remindStartDate;
+        if (effectiveStart.getTime() === d.getTime()) {
           shouldRemind = true;
         }
       } else if (t.task_type === 'once') {
-        // 单次任务：在提醒日前显示
-        const targetDate = new Date(t.once_date);
-        const diffDays = Math.round((targetDate - d) / 86400000);
-        if (diffDays >= 0 && diffDays <= remind && remind > 0) {
+        // 单次任务
+        targetDate = new Date(t.once_date);
+        const remindStartDate = new Date(targetDate);
+        remindStartDate.setDate(targetDate.getDate() - remind);
+        const effectiveStart = remindStartDate < today ? today : remindStartDate;
+        if (effectiveStart.getTime() === d.getTime()) {
           shouldRemind = true;
         }
       }
 
-      // 添加到提醒列表（去重）
-      if (shouldRemind) {
-        const diffDays = Math.round((d - today) / 86400000);
-        // 使用任务ID作为唯一标识，避免重复
-        if (!seenIds.has(t._id)) {
-          seenIds.add(t._id);
-          result.push({
-            ...t,
-            id: t._id,
-            date: ds,
-            diff_days: diffDays,
-            diff_label: diffDays === 0 ? '今天' : (diffDays === 1 ? '明天' : `${diffDays}天后`)
-          });
-        }
+      // 添加到提醒列表
+      if (shouldRemind && targetDate) {
+        const diffDays = Math.round((targetDate - today) / 86400000);
+        const year = targetDate.getFullYear();
+        const month = String(targetDate.getMonth() + 1).padStart(2, '0');
+        const day = String(targetDate.getDate()).padStart(2, '0');
+        const targetDateStr = `${year}-${month}-${day}`;
+
+        seenIds.add(t._id);
+        result.push({
+          ...t,
+          id: t._id,
+          date: targetDateStr,
+          diff_days: diffDays,
+          diff_label: diffDays === 0 ? '今天' : (diffDays === 1 ? '明天' : `${diffDays}天后`)
+        });
       }
     }
   }
@@ -979,7 +1174,7 @@ async function loadAllSchedule() {
 
     console.log('加载所有日程, currentOpenid:', currentOpenid);
 
-    const r = await db.collection('pa_schedules').where({ author_id: currentOpenid }).get();
+    const r = await db.collection('pa_schedules').where({ author_id: currentOpenid }).orderBy('once_date', 'asc').get();
     console.log('查询结果:', r);
 
     if (r.code) { throw new Error(r.message || '查询失败'); }
@@ -987,18 +1182,20 @@ async function loadAllSchedule() {
 
     console.log('所有任务:', tasks.length);
 
-    const ORDER = ['yearly','monthly','weekly','daily','once'];
-    const LABELS = { yearly:'📆 每年（纪念日/节假日）', monthly:'🗓️ 每月', weekly:'📋 每周', daily:'☀️ 每日', once:'📍 单次' };
-    const groups = {};
-    for (const t of tasks) groups[t.task_type] = [...(groups[t.task_type]||[]), t];
-    let html = '';
-    for (const type of ORDER) {
-      if (!groups[type]) continue;
-      html += `<div class="type-section">
-        <div class="type-section-title">${LABELS[type]} <span class="badge">${groups[type].length}</span></div>
-        <div class="task-list">${groups[type].map(t => taskItemHTML(t, false)).join('')}</div>
-      </div>`;
-    }
+    // 计算每个任务的下一个执行日期并排序
+    const today = new Date();
+    const sortedTasks = tasks.map(t => ({
+      ...t,
+      _nextDate: getNextDate(t, today)
+    })).sort((a, b) => {
+      if (!a._nextDate && !b._nextDate) return 0;
+      if (!a._nextDate) return 1;
+      if (!b._nextDate) return -1;
+      return a._nextDate.getTime() - b._nextDate.getTime();
+    });
+
+    // 渲染
+    let html = `<div class="task-list">${sortedTasks.map(t => taskItemHTML(t, false)).join('')}</div>`;
     document.getElementById('allScheduleList').innerHTML = html || `<div class="empty-state"><div class="empty-icon">📭</div>暂无日程</div>`;
   } catch(e) {
     console.error('loadAllSchedule error:', e);
@@ -1009,6 +1206,14 @@ async function loadAllSchedule() {
 function taskItemHTML(t, showCheck) {
   const id = t._id || t.id;
   const isDone = t.status === 'done';
+  // 显示下次执行日期
+  let nextDateStr = '';
+  if (t._nextDate) {
+    const y = t._nextDate.getFullYear();
+    const m = String(t._nextDate.getMonth() + 1).padStart(2, '0');
+    const day = String(t._nextDate.getDate()).padStart(2, '0');
+    nextDateStr = `<span class="task-date">📅 ${y}-${m}-${day}</span>`;
+  }
   return `<div class="task-item ${isDone?'done':''}" id="task-${id}">
     ${showCheck ? `<div class="task-check ${isDone?'checked':''}" onclick="toggleTask('${id}','${t.status}')"></div>` : ''}
     <div class="task-body">
@@ -1016,6 +1221,7 @@ function taskItemHTML(t, showCheck) {
       <div class="task-meta">
         ${t.description ? `<span class="task-desc">${escHtml(t.description)}</span>` : ''}
         ${tagsHTML(t.tags)}
+        ${nextDateStr}
         <span class="task-type-badge type-${t.task_type}">${typeLabel(t.task_type)}</span>
       </div>
     </div>
@@ -1037,7 +1243,27 @@ async function toggleTask(id, currentStatus) {
 
 async function deleteTask(id) {
   if (!confirm('确认删除该任务？')) return;
+  console.log('删除任务 - id:', id);
+  console.log('删除任务 - currentOpenid:', currentOpenid);
+  console.log('删除任务 - currentUser:', currentUser);
+  if (currentUser) {
+    console.log('删除任务 - currentUser.uid:', currentUser.uid);
+    console.log('删除任务 - currentUser.id:', currentUser.id);
+  }
+
+  // 先查询该任务，查看 author_id
+  const taskQuery = await db.collection('pa_schedules').doc(id).get();
+  console.log('删除任务 - 查询到的任务数据:', taskQuery);
+  if (taskQuery.data && taskQuery.data.length > 0) {
+    const task = taskQuery.data[0];
+    console.log('删除任务 - 任务所有字段:', Object.keys(task));
+    console.log('删除任务 - 任务 author_id:', task.author_id);
+    console.log('删除任务 - 任务 _openid:', task._openid);
+    console.log('删除任务 - 匹配检查:', 'currentOpenid=' + currentOpenid, 'author_id=' + task.author_id, '匹配:', currentOpenid === task.author_id);
+  }
+
   const r = await db.collection('pa_schedules').doc(id).remove();
+  console.log('删除结果:', r);
   if (typeof r.code === 'string') { toast('删除失败', 'error'); return; }
   toast('已删除', 'success'); loadToday();
   if (activeTab === 'all') loadAllSchedule();
